@@ -1,0 +1,149 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Modal } from "@/components/ui/Modal";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Button } from "@/components/ui/Button";
+import { createProject } from "@/actions/projects";
+import { Sparkles } from "lucide-react";
+
+const TYPE_OPTIONS = [
+  { value: "RESIDENTIAL_SUBDIVISION", label: "Residential Subdivision" },
+  { value: "TOWNHOUSE_DEVELOPMENT", label: "Townhouse Development" },
+  { value: "MIXED_USE", label: "Mixed Use" },
+  { value: "COMMERCIAL", label: "Commercial" },
+  { value: "RENOVATION", label: "Renovation" },
+];
+
+interface NewProjectModalProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [useTemplate, setUseTemplate] = useState(true);
+  const [form, setForm] = useState({
+    name: "",
+    address: "",
+    suburb: "",
+    type: "RESIDENTIAL_SUBDIVISION",
+    lotCount: "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  function validate() {
+    const e: Record<string, string> = {};
+    if (!form.name.trim()) e.name = "Project name is required";
+    return e;
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
+    startTransition(async () => {
+      const project = await createProject({
+        name: form.name.trim(),
+        address: form.address.trim(),
+        suburb: form.suburb.trim(),
+        type: form.type,
+        lotCount: form.lotCount ? parseInt(form.lotCount) : undefined,
+        useTemplate,
+      });
+      onClose();
+      router.push(`/projects/${project.id}`);
+    });
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title="New Project" size="md">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <Input
+          label="Project name"
+          placeholder="e.g. 220 Moss Vale Rd"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          error={errors.name}
+          required
+        />
+        <div className="grid grid-cols-2 gap-3">
+          <Input
+            label="Address"
+            placeholder="Street address"
+            value={form.address}
+            onChange={(e) => setForm({ ...form, address: e.target.value })}
+          />
+          <Input
+            label="Suburb"
+            placeholder="e.g. Bowral"
+            value={form.suburb}
+            onChange={(e) => setForm({ ...form, suburb: e.target.value })}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Select
+            label="Development type"
+            options={TYPE_OPTIONS}
+            value={form.type}
+            onChange={(e) => setForm({ ...form, type: e.target.value })}
+          />
+          <Input
+            label="Lot count"
+            type="number"
+            placeholder="e.g. 12"
+            min={1}
+            value={form.lotCount}
+            onChange={(e) => setForm({ ...form, lotCount: e.target.value })}
+          />
+        </div>
+
+        {/* Template toggle */}
+        <label
+          className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-gray-50"
+          style={{
+            borderColor: useTemplate ? "var(--accent-mid)" : "var(--border)",
+            background: useTemplate ? "var(--accent-light)" : undefined,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={useTemplate}
+            onChange={(e) => setUseTemplate(e.target.checked)}
+            className="mt-0.5 accent-teal-600"
+          />
+          <div>
+            <div
+              className="flex items-center gap-1.5 text-sm font-medium"
+              style={{ color: "var(--text-primary)" }}
+            >
+              <Sparkles className="w-3.5 h-3.5" style={{ color: "var(--accent)" }} />
+              Pre-fill with standard NSW subdivision tasks
+            </div>
+            <p
+              className="text-xs mt-0.5"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Adds ~40 tasks across all 6 phases based on a typical residential subdivision. You can edit or delete any of them.
+            </p>
+          </div>
+        </label>
+
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="ghost" type="button" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" type="submit" disabled={isPending}>
+            {isPending ? "Creating…" : "Create Project"}
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
