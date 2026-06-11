@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, Plus, CalendarDays, Clock, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { MEETING_TYPE_LABELS, PROJECT_TYPE_LABELS } from "@/lib/utils";
+import { MEETING_TYPE_LABELS } from "@/lib/utils";
 import { formatAUDate } from "@/lib/dates";
 import { NewMeetingModal } from "./NewMeetingModal";
 
@@ -21,25 +21,23 @@ export function MeetingsListClient({
   const [newMeetingOpen, setNewMeetingOpen] = useState(false);
 
   return (
-    <div className="max-w-screen-xl mx-auto px-6 py-6">
+    <div className="app-page">
       <Link
         href={`/projects/${project.id}`}
-        className="inline-flex items-center gap-1.5 text-sm mb-5 transition-colors hover:opacity-70"
-        style={{ color: "var(--text-muted)" }}
+        className="mb-5 inline-flex items-center gap-1.5 text-xs text-[#6b6b6b] transition-colors hover:text-[#111111]"
       >
         <ChevronLeft className="w-4 h-4" />
         {project.name}
       </Link>
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-8 flex items-end justify-between gap-4">
         <div>
           <h1
-            className="text-xl font-bold"
-            style={{ fontFamily: "Syne, sans-serif", color: "var(--text-primary)" }}
+            className="page-title"
           >
             Meetings
           </h1>
-          <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>
+          <p className="page-subtitle mt-1">
             {meetings.length} record{meetings.length !== 1 ? "s" : ""}
           </p>
         </div>
@@ -51,8 +49,7 @@ export function MeetingsListClient({
 
       {meetings.length === 0 ? (
         <div
-          className="text-center py-16 rounded-xl border"
-          style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
+          className="surface-card py-16 text-center"
         >
           <CalendarDays
             className="w-10 h-10 mx-auto mb-3"
@@ -75,18 +72,13 @@ export function MeetingsListClient({
             <Link
               key={meeting.id}
               href={`/projects/${project.id}/meetings/${meeting.id}`}
-              className="flex items-center justify-between p-4 rounded-xl border transition-all hover:shadow-sm hover:-translate-y-px"
-              style={{
-                background: "var(--bg-surface)",
-                borderColor: "var(--border)",
-              }}
+              className="surface-card flex items-center justify-between p-5 transition-transform hover:-translate-y-px"
             >
               <div className="flex items-start gap-4">
                 <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ background: "var(--accent-light)" }}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[#ebf0f7]"
                 >
-                  <CalendarDays className="w-5 h-5" style={{ color: "var(--accent)" }} />
+                  <CalendarDays className="h-5 w-5 text-[#4a6fa5]" strokeWidth={1.5} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">

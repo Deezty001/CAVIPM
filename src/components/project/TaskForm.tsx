@@ -72,7 +72,7 @@ export function TaskForm({
   const [name, setName] = useState(initialValues?.name ?? "");
   const [description, setDescription] = useState(initialValues?.description ?? "");
   const [assigneeId, setAssigneeId] = useState(initialValues?.assigneeId ?? "");
-  const [assigneeText, setAssigneeText] = useState(initialValues?.assigneeText ?? "");
+  const assigneeText = initialValues?.assigneeText ?? "";
   const [startDate, setStartDate] = useState(toDateInput(initialValues?.startDate));
   const [dueDate, setDueDate] = useState(toDateInput(initialValues?.dueDate));
   const [duration, setDuration] = useState(
@@ -203,10 +203,9 @@ export function TaskForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-xl border p-4 flex flex-col gap-3"
+      className="flex flex-col gap-3 rounded-[16px] bg-[#f5f5f3] p-4"
       style={{
-        background: "var(--bg-surface)",
-        borderColor: "var(--border)",
+        borderColor: "var(--border-default)",
       }}
     >
       <div className="grid grid-cols-1 gap-3">

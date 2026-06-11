@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { TaskForm } from "./TaskForm";
 import { updateTask } from "@/actions/tasks";

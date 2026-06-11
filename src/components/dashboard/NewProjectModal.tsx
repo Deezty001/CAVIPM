@@ -106,24 +106,24 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
 
         {/* Template toggle */}
         <label
-          className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-gray-50"
+          className="flex cursor-pointer items-start gap-3 rounded-[10px] border p-3 transition-colors hover:bg-[#f0f0ee]"
           style={{
-            borderColor: useTemplate ? "var(--accent-mid)" : "var(--border)",
-            background: useTemplate ? "var(--accent-light)" : undefined,
+            borderColor: useTemplate ? "var(--border-active)" : "var(--border-default)",
+            background: useTemplate ? "var(--accent-blue-light)" : undefined,
           }}
         >
           <input
             type="checkbox"
             checked={useTemplate}
             onChange={(e) => setUseTemplate(e.target.checked)}
-            className="mt-0.5 accent-teal-600"
+            className="mt-0.5 accent-[#111111]"
           />
           <div>
             <div
               className="flex items-center gap-1.5 text-sm font-medium"
               style={{ color: "var(--text-primary)" }}
             >
-              <Sparkles className="w-3.5 h-3.5" style={{ color: "var(--accent)" }} />
+              <Sparkles className="w-3.5 h-3.5" style={{ color: "var(--accent-blue)" }} />
               Pre-fill with standard NSW subdivision tasks
             </div>
             <p

@@ -16,8 +16,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label
             htmlFor={selectId}
-            className="text-sm font-medium"
-            style={{ color: "var(--text-secondary)" }}
+            className="text-xs font-medium text-[#6b6b6b]"
           >
             {label}
           </label>
@@ -27,19 +26,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             id={selectId}
             className={cn(
-              "w-full px-3 py-2 pr-9 text-sm rounded-lg border transition-all duration-150 appearance-none",
-              "focus:outline-none focus:ring-2",
-              error && "border-red-400",
+              "h-[38px] w-full appearance-none rounded-[10px] border bg-[#f5f5f3] px-[14px] pr-9 text-[13px] text-[#111111] outline-none transition-all duration-150",
+              "hover:border-[#bebebe] focus:border-[#111111] focus:bg-white focus:shadow-[0_0_0_3px_rgba(17,17,17,0.08)]",
+              error ? "border-[#a03535]" : "border-[#e0e0de]",
               className
             )}
-            style={
-              {
-                borderColor: error ? undefined : "var(--border)",
-                background: "var(--bg-surface)",
-                color: "var(--text-primary)",
-                "--tw-ring-color": "var(--accent-mid)",
-              } as React.CSSProperties
-            }
             {...props}
           >
             {options.map((opt) => (
@@ -50,10 +41,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </select>
           <ChevronDown
             className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-            style={{ color: "var(--text-muted)" }}
+            style={{ color: "var(--text-tertiary)" }}
           />
         </div>
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && <p className="text-[11px] font-medium text-[#a03535]">{error}</p>}
       </div>
     );
   }

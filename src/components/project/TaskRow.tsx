@@ -5,7 +5,6 @@ import {
   ChevronDown,
   Pencil,
   Trash2,
-  MessageSquare,
   Plus,
 } from "lucide-react";
 import {
@@ -51,7 +50,6 @@ interface TaskRowProps {
   projectId: string;
   contacts: Contact[];
   phaseId: string;
-  phaseIndex: number;
   isSubtask?: boolean;
 }
 
@@ -60,7 +58,6 @@ export function TaskRow({
   projectId,
   contacts,
   phaseId,
-  phaseIndex,
   isSubtask = false,
 }: TaskRowProps) {
   const [expanded, setExpanded] = useState(false);

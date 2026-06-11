@@ -12,24 +12,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-150 cursor-pointer border",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
-          size === "sm" && "text-xs px-3 py-1.5",
-          size === "md" && "text-sm px-4 py-2",
-          size === "lg" && "text-sm px-5 py-2.5",
-          variant === "primary" && "text-white border-transparent hover:opacity-90 active:scale-[0.98]",
-          variant === "secondary" && "border bg-white hover:bg-gray-50 active:scale-[0.98]",
-          variant === "ghost" && "border-transparent bg-transparent hover:bg-black/5",
-          variant === "danger" && "text-red-600 border-red-200 bg-red-50 hover:bg-red-100",
+          "inline-flex items-center justify-center gap-1.5 rounded-full border font-medium leading-none transition-all duration-150 cursor-pointer",
+          "focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+          size === "sm" && "h-8 px-3 text-xs",
+          size === "md" && "h-[38px] px-5 text-[13px]",
+          size === "lg" && "h-11 px-7 text-sm",
+          variant === "primary" && "border-[#111111] bg-[#111111] text-white hover:opacity-80 active:opacity-70",
+          variant === "secondary" && "border-[#e0e0de] bg-white text-[#111111] hover:border-[#bebebe] hover:bg-[#f5f5f3] active:bg-[#edecea]",
+          variant === "ghost" && "border-transparent bg-transparent text-[#6b6b6b] hover:bg-[#f0f0ee] hover:text-[#111111]",
+          variant === "danger" && "border-transparent bg-[#f7ebeb] text-[#a03535] hover:bg-[#f1dddd]",
           className
         )}
-        style={
-          variant === "primary"
-            ? { background: "var(--accent)", borderColor: "var(--accent)" }
-            : variant === "secondary"
-            ? { borderColor: "var(--border)", color: "var(--text-primary)" }
-            : { color: "var(--text-secondary)" }
-        }
         {...props}
       >
         {children}

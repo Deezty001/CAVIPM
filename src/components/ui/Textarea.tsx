@@ -14,8 +14,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {label && (
           <label
             htmlFor={textareaId}
-            className="text-sm font-medium"
-            style={{ color: "var(--text-secondary)" }}
+            className="text-xs font-medium text-[#6b6b6b]"
           >
             {label}
           </label>
@@ -24,23 +23,14 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           id={textareaId}
           className={cn(
-            "px-3 py-2 text-sm rounded-lg border transition-all duration-150 resize-none",
-            "placeholder:text-gray-400",
-            "focus:outline-none focus:ring-2",
-            error && "border-red-400",
+            "min-h-24 w-full resize-y rounded-[10px] border bg-[#f5f5f3] px-[14px] py-2.5 text-[13px] leading-relaxed text-[#111111] outline-none transition-all duration-150",
+            "placeholder:text-[#a0a0a0] hover:border-[#bebebe] focus:border-[#111111] focus:bg-white focus:shadow-[0_0_0_3px_rgba(17,17,17,0.08)]",
+            error ? "border-[#a03535]" : "border-[#e0e0de]",
             className
           )}
-          style={
-            {
-              borderColor: error ? undefined : "var(--border)",
-              background: "var(--bg-surface)",
-              color: "var(--text-primary)",
-              "--tw-ring-color": "var(--accent-mid)",
-            } as React.CSSProperties
-          }
           {...props}
         />
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && <p className="text-[11px] font-medium text-[#a03535]">{error}</p>}
       </div>
     );
   }

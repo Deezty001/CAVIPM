@@ -66,12 +66,11 @@ export function ProjectDetailClient({ project }: { project: Project }) {
     : "Complete";
 
   return (
-    <div className="max-w-screen-xl mx-auto px-6 py-6">
+    <div className="app-page">
       {/* Breadcrumb */}
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-sm mb-5 transition-colors hover:opacity-70"
-        style={{ color: "var(--text-muted)" }}
+        className="mb-5 inline-flex items-center gap-1.5 text-xs text-[#6b6b6b] transition-colors hover:text-[#111111]"
       >
         <ChevronLeft className="w-4 h-4" />
         Projects
@@ -79,31 +78,29 @@ export function ProjectDetailClient({ project }: { project: Project }) {
 
       {/* Project header */}
       <div
-        className="rounded-xl border p-5 mb-5"
-        style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
+        className="surface-card mb-5 p-6"
       >
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h1
-                className="text-xl font-bold truncate"
-                style={{ fontFamily: "Syne, sans-serif", color: "var(--text-primary)" }}
+                className="page-title truncate"
               >
                 {project.name}
               </h1>
               <span
                 className={`text-xs px-2 py-0.5 rounded-full border font-medium shrink-0 ${
                   project.status === "ACTIVE"
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    ? "bg-[#ebf5ee] text-[#3d7a55] border-transparent"
                     : project.status === "ON_HOLD"
-                    ? "bg-amber-50 text-amber-700 border-amber-200"
-                    : "bg-slate-100 text-slate-500 border-slate-200"
+                    ? "bg-[#f7f0e5] text-[#96702a] border-transparent"
+                    : "bg-[#f0f0ee] text-[#6b6b6b] border-transparent"
                 }`}
               >
                 {statusLabel}
               </span>
             </div>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            <p className="mt-1 text-[13px] text-[#6b6b6b]">
               {[project.address, project.suburb].filter(Boolean).join(", ")}
               {project.lotCount && ` · ${project.lotCount} lots`}
             </p>
@@ -111,24 +108,21 @@ export function ProjectDetailClient({ project }: { project: Project }) {
           <div className="flex items-center gap-2 shrink-0">
             <Link
               href={`/projects/${project.id}/gantt`}
-              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors hover:bg-gray-50"
-              style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
+              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#e0e0de] bg-white px-3 text-xs font-medium text-[#111111] transition-colors hover:border-[#bebebe] hover:bg-[#f5f5f3]"
             >
               <BarChart2 className="w-3.5 h-3.5" />
               Gantt
             </Link>
             <Link
               href={`/projects/${project.id}/meetings`}
-              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors hover:bg-gray-50"
-              style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
+              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#e0e0de] bg-white px-3 text-xs font-medium text-[#111111] transition-colors hover:border-[#bebebe] hover:bg-[#f5f5f3]"
             >
               <CalendarDays className="w-3.5 h-3.5" />
               Meetings
             </Link>
             <button
               onClick={() => setSettingsOpen(true)}
-              className="w-8 h-8 flex items-center justify-center rounded-lg border transition-colors hover:bg-gray-50"
-              style={{ borderColor: "var(--border)" }}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f5f5f3] transition-colors hover:bg-[#e8e8e6]"
               aria-label="Project settings"
             >
               <Settings
@@ -147,12 +141,12 @@ export function ProjectDetailClient({ project }: { project: Project }) {
           >
             <div
               className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${pct}%`, background: "var(--accent)" }}
+              style={{ width: `${pct}%`, background: "var(--accent-blue)" }}
             />
           </div>
           <span
             className="text-sm font-semibold tabular-nums w-10 text-right"
-            style={{ color: "var(--accent)" }}
+            style={{ color: "var(--text-primary)" }}
           >
             {pct}%
           </span>
@@ -189,11 +183,7 @@ export function ProjectDetailClient({ project }: { project: Project }) {
                   block: "start",
                 });
               }}
-              className={`text-left p-3 rounded-xl border transition-all hover:shadow-sm`}
-              style={{
-                background: "var(--bg-surface)",
-                borderColor: "var(--border)",
-              }}
+              className="surface-card p-3 text-left transition-transform hover:-translate-y-px"
             >
               <div
                 className={`text-xs font-semibold mb-1.5 truncate ${PHASE_COLORS[i].split(" ")[1]}`}
@@ -222,8 +212,7 @@ export function ProjectDetailClient({ project }: { project: Project }) {
 
       {/* Tab bar */}
       <div
-        className="flex gap-1 border-b mb-5"
-        style={{ borderColor: "var(--border)" }}
+        className="mb-5 inline-flex gap-1 rounded-full bg-[#eaeae8] p-1"
       >
         {[
           { key: "tasks", label: "Tasks", icon: <BarChart2 className="w-3.5 h-3.5" /> },
@@ -236,14 +225,10 @@ export function ProjectDetailClient({ project }: { project: Project }) {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key as never)}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px`}
+            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-medium transition-colors"
             style={{
-              borderBottomColor:
-                activeTab === tab.key ? "var(--accent)" : "transparent",
-              color:
-                activeTab === tab.key
-                  ? "var(--accent)"
-                  : "var(--text-secondary)",
+              background: activeTab === tab.key ? "var(--bg-dark)" : "transparent",
+              color: activeTab === tab.key ? "white" : "var(--text-secondary)",
             }}
           >
             {tab.icon}
@@ -256,7 +241,7 @@ export function ProjectDetailClient({ project }: { project: Project }) {
         <div className="flex flex-col gap-3">
           {project.phases
             .sort((a, b) => a.order - b.order)
-            .map((phase, i) => (
+            .map((phase) => (
               <PhaseSection
                 key={phase.id}
                 phase={phase as never}

@@ -24,48 +24,48 @@ export const PHASE_NAMES = [
 ] as const;
 
 export const PHASE_COLORS = [
-  "bg-violet-100 text-violet-700 border-violet-200",
-  "bg-blue-100 text-blue-700 border-blue-200",
-  "bg-amber-100 text-amber-700 border-amber-200",
-  "bg-emerald-100 text-emerald-700 border-emerald-200",
-  "bg-rose-100 text-rose-700 border-rose-200",
-  "bg-slate-100 text-slate-700 border-slate-200",
+  "bg-[#eeeaf7] text-[#534a82] border-[#ded7ef]",
+  "bg-[#ebf0f7] text-[#2d4f7c] border-[#d8e1ed]",
+  "bg-[#f5ede7] text-[#8a4e38] border-[#ead9cf]",
+  "bg-[#ebf5ee] text-[#3d7a55] border-[#d7eadc]",
+  "bg-[#f7f0e5] text-[#96702a] border-[#eadfc8]",
+  "bg-[#f0f0ee] text-[#6b6b6b] border-[#e0e0de]",
 ] as const;
 
 export const PHASE_BAR_COLORS = [
-  "bg-violet-500",
-  "bg-blue-500",
-  "bg-amber-500",
-  "bg-emerald-500",
-  "bg-rose-500",
-  "bg-slate-500",
+  "bg-[#7a6faf]",
+  "bg-[#4a6fa5]",
+  "bg-[#b8735a]",
+  "bg-[#3d7a55]",
+  "bg-[#96702a]",
+  "bg-[#a0a0a0]",
 ] as const;
 
 export const PHASE_GANTT_COLORS = [
-  "#8b5cf6",
-  "#3b82f6",
-  "#f59e0b",
-  "#10b981",
-  "#f43f5e",
-  "#64748b",
+  "#7a6faf",
+  "#4a6fa5",
+  "#b8735a",
+  "#3d7a55",
+  "#96702a",
+  "#a0a0a0",
 ] as const;
 
 export const STATUS_CONFIG = {
   TODO: {
     label: "To Do",
-    className: "bg-slate-100 text-slate-600 border-slate-200",
+    className: "bg-[#f0f0ee] text-[#6b6b6b] border-[#e0e0de]",
   },
   IN_PROGRESS: {
     label: "In Progress",
-    className: "bg-blue-100 text-blue-700 border-blue-200",
+    className: "bg-[#f5ede7] text-[#8a4e38] border-[#ead9cf]",
   },
   DONE: {
     label: "Done",
-    className: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    className: "bg-[#ebf5ee] text-[#3d7a55] border-[#d7eadc]",
   },
   BLOCKED: {
     label: "Blocked",
-    className: "bg-red-100 text-red-700 border-red-200",
+    className: "bg-[#f7ebeb] text-[#a03535] border-[#ecd3d3]",
   },
 } as const;
 

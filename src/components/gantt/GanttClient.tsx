@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { PHASE_NAMES, PHASE_GANTT_COLORS } from "@/lib/utils";
-import { isBusinessDay, getHolidayName } from "@/lib/holidays";
+import { isBusinessDay } from "@/lib/holidays";
 import { formatAUDate, formatDuration } from "@/lib/dates";
 
 type Project = NonNullable<Awaited<ReturnType<typeof import("@/actions/projects").getProject>>>;
@@ -47,7 +47,6 @@ interface GanttBarInfo {
 export function GanttClient({ project }: { project: Project }) {
   const [zoom, setZoom] = useState<ZoomLevel>("month");
   const [tooltip, setTooltip] = useState<{ bar: GanttBarInfo; x: number; y: number } | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -128,8 +127,6 @@ export function GanttClient({ project }: { project: Project }) {
   }
 
   const totalWidth = labelWidth + allRangeDays.length * colWidth;
-  const totalHeight = bars.length * rowHeight + 60;
-
   // Today line X
   const todayX = dayToX(today);
 
@@ -156,37 +153,33 @@ export function GanttClient({ project }: { project: Project }) {
   const svgHeight = rows.length * rowHeight + 40;
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-6 py-6">
+    <div className="app-page">
       {/* Header */}
       <Link
         href={`/projects/${project.id}`}
-        className="inline-flex items-center gap-1.5 text-sm mb-5 transition-colors hover:opacity-70"
-        style={{ color: "var(--text-muted)" }}
+        className="mb-5 inline-flex items-center gap-1.5 text-xs text-[#6b6b6b] transition-colors hover:text-[#111111]"
       >
         <ChevronLeft className="w-4 h-4" />
         {project.name}
       </Link>
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-6 flex items-end justify-between gap-4">
         <h1
-          className="text-xl font-bold"
-          style={{ fontFamily: "Syne, sans-serif", color: "var(--text-primary)" }}
+          className="page-title"
         >
           Gantt Chart
         </h1>
         <div
-          className="flex rounded-lg border overflow-hidden text-sm"
-          style={{ borderColor: "var(--border)" }}
+          className="flex rounded-full bg-[#eaeae8] p-1 text-[13px]"
         >
           {(["week", "month", "quarter"] as ZoomLevel[]).map((z) => (
             <button
               key={z}
               onClick={() => setZoom(z)}
-              className="px-3 py-1.5 capitalize transition-colors"
+              className="rounded-full px-4 py-2 capitalize transition-colors"
               style={{
-                background: zoom === z ? "var(--accent)" : "var(--bg-surface)",
+                background: zoom === z ? "var(--bg-dark)" : "transparent",
                 color: zoom === z ? "white" : "var(--text-secondary)",
-                borderRight: z !== "quarter" ? `1px solid var(--border)` : undefined,
               }}
             >
               {z}
@@ -206,11 +199,8 @@ export function GanttClient({ project }: { project: Project }) {
         </div>
       ) : (
         <div
-          ref={containerRef}
-          className="rounded-xl border overflow-auto"
+          className="surface-card overflow-auto"
           style={{
-            background: "var(--bg-surface)",
-            borderColor: "var(--border)",
             maxHeight: "calc(100vh - 200px)",
           }}
         >
@@ -225,7 +215,6 @@ export function GanttClient({ project }: { project: Project }) {
               days={allRangeDays}
               colWidth={colWidth}
               labelWidth={labelWidth}
-              today={today}
             />
 
             {/* Column backgrounds */}
@@ -243,7 +232,7 @@ export function GanttClient({ project }: { project: Project }) {
                   height={svgHeight + 40}
                   fill={
                     isToday
-                      ? "rgba(15,118,110,0.04)"
+                      ? "rgba(74,111,165,0.06)"
                       : isWeekend
                       ? "rgba(0,0,0,0.025)"
                       : isHoliday
@@ -321,14 +310,11 @@ export function GanttClient({ project }: { project: Project }) {
                     strokeWidth={isBlocked ? 2 : 0}
                     style={{ cursor: "pointer" }}
                     onMouseEnter={(e) => {
-                      const rect = containerRef.current?.getBoundingClientRect();
-                      if (rect) {
-                        setTooltip({
-                          bar,
-                          x: e.clientX - rect.left + 12,
-                          y: e.clientY - rect.top - 10,
-                        });
-                      }
+                      setTooltip({
+                        bar,
+                        x: e.clientX + 12,
+                        y: e.clientY - 10,
+                      });
                     }}
                     onMouseLeave={() => setTooltip(null)}
                   />
@@ -375,12 +361,10 @@ export function GanttClient({ project }: { project: Project }) {
           {/* Tooltip */}
           {tooltip && (
             <div
-              className="fixed z-50 pointer-events-none rounded-lg shadow-lg border text-xs p-3 min-w-[180px]"
+              className="pointer-events-none fixed z-[300] min-w-[180px] rounded-[10px] border border-[#ebebeb] bg-white p-3 text-xs shadow-[var(--shadow-raised)]"
               style={{
-                left: tooltip.x + (containerRef.current?.getBoundingClientRect().left ?? 0),
-                top: tooltip.y + (containerRef.current?.getBoundingClientRect().top ?? 0),
-                background: "var(--bg-surface)",
-                borderColor: "var(--border)",
+                left: tooltip.x,
+                top: tooltip.y,
                 color: "var(--text-primary)",
               }}
             >
@@ -422,12 +406,10 @@ function MonthHeader({
   days,
   colWidth,
   labelWidth,
-  today,
 }: {
   days: Date[];
   colWidth: number;
   labelWidth: number;
-  today: Date;
 }) {
   // Group consecutive days by month
   const months: { label: string; x: number; width: number }[] = [];

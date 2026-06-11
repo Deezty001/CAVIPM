@@ -10,7 +10,7 @@ export function Badge({ children, className, variant = "default" }: BadgeProps) 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md border",
+        "inline-flex items-center gap-1 rounded-full border px-2 py-[3px] text-[11px] font-medium leading-[1.4]",
         variant === "outline" && "bg-transparent",
         className
       )}

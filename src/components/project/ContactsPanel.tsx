@@ -120,10 +120,7 @@ export function ContactsPanel({ contacts, projectId }: ContactsPanelProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h2
-          className="text-base font-semibold"
-          style={{ fontFamily: "Syne, sans-serif", color: "var(--text-primary)" }}
-        >
+        <h2 className="section-title">
           Project Team & Contacts
         </h2>
         <Button variant="primary" size="sm" onClick={openNew}>
@@ -134,8 +131,7 @@ export function ContactsPanel({ contacts, projectId }: ContactsPanelProps) {
 
       {contacts.length === 0 ? (
         <div
-          className="text-center py-12 rounded-xl border"
-          style={{ borderColor: "var(--border)", background: "var(--bg-surface)" }}
+          className="surface-card py-12 text-center"
         >
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>
             No contacts yet — add your project team and consultants
@@ -250,8 +246,7 @@ function ContactGroup({
   return (
     <div>
       <h3
-        className="text-xs font-semibold uppercase tracking-wider mb-3"
-        style={{ color: "var(--text-muted)" }}
+        className="mb-3 text-xs font-medium text-[#6b6b6b]"
       >
         {title}
       </h3>
@@ -259,11 +254,7 @@ function ContactGroup({
         {contacts.map((c) => (
           <div
             key={c.id}
-            className="flex items-start gap-3 p-3 rounded-xl border group transition-colors hover:bg-gray-50/50"
-            style={{
-              background: "var(--bg-surface)",
-              borderColor: "var(--border)",
-            }}
+            className="surface-card group flex items-start gap-3 p-4 transition-transform hover:-translate-y-px"
           >
             <Avatar initials={c.initials} size="md" title={c.name} />
             <div className="flex-1 min-w-0">

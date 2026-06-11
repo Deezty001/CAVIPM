@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import Link from "next/link";
-import { ChevronLeft, Download, Printer, Clock, MapPin, User } from "lucide-react";
+import { ChevronLeft, Download, Clock, MapPin, User } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { MEETING_TYPE_LABELS } from "@/lib/utils";
@@ -54,23 +54,21 @@ export function MeetingDetailClient({ meeting }: { meeting: Meeting }) {
   }
 
   return (
-    <div className="max-w-screen-lg mx-auto px-6 py-6">
+    <div className="app-page max-w-[1120px]">
       {/* Breadcrumb */}
       <Link
         href={`/projects/${meeting.projectId}/meetings`}
-        className="inline-flex items-center gap-1.5 text-sm mb-5 transition-colors hover:opacity-70"
-        style={{ color: "var(--text-muted)" }}
+        className="mb-5 inline-flex items-center gap-1.5 text-xs text-[#6b6b6b] transition-colors hover:text-[#111111]"
       >
         <ChevronLeft className="w-4 h-4" />
         Meetings
       </Link>
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="mb-8 flex items-start justify-between gap-4">
         <div>
           <h1
-            className="text-xl font-bold mb-1"
-            style={{ fontFamily: "Syne, sans-serif", color: "var(--text-primary)" }}
+            className="page-title mb-2"
           >
             {meetingTypeLabel}
           </h1>
@@ -110,8 +108,7 @@ export function MeetingDetailClient({ meeting }: { meeting: Meeting }) {
       <div className="flex flex-col gap-5">
         {/* Info table */}
         <div
-          className="rounded-xl border overflow-hidden"
-          style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
+          className="surface-card overflow-hidden"
         >
           <table className="w-full text-sm">
             <tbody>
@@ -138,18 +135,16 @@ export function MeetingDetailClient({ meeting }: { meeting: Meeting }) {
         {meeting.attendees.length > 0 && (
           <section>
             <h2
-              className="text-sm font-semibold mb-3"
-              style={{ fontFamily: "Syne, sans-serif", color: "var(--text-primary)" }}
+              className="section-title mb-3"
             >
               Attendees
             </h2>
             <div
-              className="rounded-xl border overflow-hidden"
-              style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
+              className="surface-card overflow-hidden"
             >
               <table className="w-full text-sm">
                 <thead>
-                  <tr style={{ background: "var(--accent)" }}>
+                  <tr style={{ background: "var(--bg-dark)" }}>
                     {["Name", "Initials", "Title", "Organisation"].map((h) => (
                       <th
                         key={h}
@@ -195,18 +190,16 @@ export function MeetingDetailClient({ meeting }: { meeting: Meeting }) {
         {meeting.agendaItems.length > 0 && (
           <section>
             <h2
-              className="text-sm font-semibold mb-3"
-              style={{ fontFamily: "Syne, sans-serif", color: "var(--text-primary)" }}
+              className="section-title mb-3"
             >
               Minutes
             </h2>
             <div
-              className="rounded-xl border overflow-hidden"
-              style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
+              className="surface-card overflow-hidden"
             >
               <table className="w-full text-sm">
                 <thead>
-                  <tr style={{ background: "var(--accent)" }}>
+                  <tr style={{ background: "var(--bg-dark)" }}>
                     {["Item", "Description", "Action", "Owner"].map((h, i) => (
                       <th
                         key={h}
@@ -225,12 +218,12 @@ export function MeetingDetailClient({ meeting }: { meeting: Meeting }) {
                       {/* Section header row */}
                       <tr
                         key={`section-${item.id}`}
-                        style={{ background: "var(--accent-light)", borderTop: "1px solid var(--border)" }}
+                        style={{ background: "var(--accent-blue-light)", borderTop: "1px solid var(--divider)" }}
                       >
                         <td
                           colSpan={4}
                           className="px-4 py-2.5 font-semibold text-xs"
-                          style={{ color: "var(--accent)" }}
+                          style={{ color: "var(--accent-blue-dark)" }}
                         >
                           {item.number} {item.title}
                         </td>
@@ -279,18 +272,16 @@ export function MeetingDetailClient({ meeting }: { meeting: Meeting }) {
         {allActions.length > 0 && (
           <section>
             <h2
-              className="text-sm font-semibold mb-3"
-              style={{ fontFamily: "Syne, sans-serif", color: "var(--text-primary)" }}
+              className="section-title mb-3"
             >
               Actions Arising
             </h2>
             <div
-              className="rounded-xl border overflow-hidden"
-              style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
+              className="surface-card overflow-hidden"
             >
               <table className="w-full text-sm">
                 <thead>
-                  <tr style={{ background: "var(--accent)" }}>
+                  <tr style={{ background: "var(--bg-dark)" }}>
                     {["#", "Action", "Owner", "Date"].map((h) => (
                       <th
                         key={h}

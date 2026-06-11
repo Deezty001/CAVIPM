@@ -89,17 +89,16 @@ export function PhaseSection({
   return (
     <section
       id={`phase-${phaseIndex}`}
-      className="rounded-xl border overflow-hidden"
-      style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
+      className="surface-card overflow-hidden"
     >
       {/* Phase header */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-4 py-3 transition-colors hover:bg-gray-50/50"
+        className="flex w-full items-center justify-between px-5 py-4 transition-colors hover:bg-[#f5f5f3]"
       >
         <div className="flex items-center gap-3">
           <span
-            className={`text-xs font-semibold px-2.5 py-1 rounded-lg border ${colorClasses}`}
+            className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${colorClasses}`}
           >
             {phase.name}
           </span>
@@ -140,7 +139,7 @@ export function PhaseSection({
 
       {/* Blocked banner */}
       {expanded && blocked > 0 && (
-        <div className="mx-4 mb-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
+        <div className="mx-5 mb-3 flex items-center gap-2 rounded-[10px] bg-[#f7ebeb] px-3 py-2 text-xs text-[#a03535]">
           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
           <span>
             {phase.tasks
@@ -159,9 +158,9 @@ export function PhaseSection({
             <div
               className="hidden md:grid grid-cols-[minmax(0,1fr)_120px_100px_100px_80px_80px_60px] gap-2 px-4 py-2 text-xs font-medium border-b"
               style={{
-                color: "var(--text-muted)",
-                borderColor: "var(--border)",
-                background: "var(--bg-muted)",
+                color: "var(--text-secondary)",
+                borderColor: "var(--divider)",
+                background: "var(--bg-subtle)",
               }}
             >
               <span>Task</span>
@@ -175,7 +174,7 @@ export function PhaseSection({
           )}
 
           {/* Tasks */}
-          <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+          <div className="divide-y" style={{ borderColor: "var(--divider)" }}>
             {phase.tasks.map((task) => (
               <TaskRow
                 key={task.id}
@@ -183,13 +182,12 @@ export function PhaseSection({
                 projectId={projectId}
                 contacts={contacts}
                 phaseId={phase.id}
-                phaseIndex={phaseIndex}
               />
             ))}
           </div>
 
           {/* Add task */}
-          <div className="px-4 py-3 border-t" style={{ borderColor: "var(--border)" }}>
+          <div className="border-t px-5 py-3" style={{ borderColor: "var(--divider)" }}>
             {showAddTask ? (
               <TaskForm
                 contacts={contacts}
@@ -201,7 +199,7 @@ export function PhaseSection({
               <button
                 onClick={() => setShowAddTask(true)}
                 className="flex items-center gap-1.5 text-sm transition-colors hover:opacity-70"
-                style={{ color: "var(--accent)" }}
+                style={{ color: "var(--text-link)" }}
               >
                 <Plus className="w-4 h-4" />
                 Add task
