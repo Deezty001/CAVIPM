@@ -164,7 +164,7 @@ export function GanttClient({ project }: { project: Project }) {
 
   const colWidth = zoom === "day" ? 64 : zoom === "week" ? 40 : zoom === "month" ? 24 : 14;
   const rowHeight = 36;
-  const labelWidth = 240;
+  const labelWidth = 380;
 
   function dayToX(date: Date): number {
     const diff = Math.round((date.getTime() - rangeStart.getTime()) / 86400000);
@@ -792,6 +792,8 @@ export function GanttClient({ project }: { project: Project }) {
               {/* Header block */}
               <rect x={0} y={0} width={labelWidth} height={40} fill="#f8fafc" />
               <line x1={0} y1={39} x2={labelWidth} y2={39} stroke="#e2e8f0" strokeWidth={1} />
+              
+              {/* TASKS column header */}
               <text
                 x={12}
                 y={24}
@@ -801,7 +803,35 @@ export function GanttClient({ project }: { project: Project }) {
                 fontFamily="Plus Jakarta Sans, sans-serif"
                 letterSpacing="0.5px"
               >
-                TASKS & TIMELINE
+                TASKS
+              </text>
+
+              {/* START column header */}
+              <text
+                x={255}
+                y={24}
+                fontSize={10}
+                fontWeight={700}
+                fill="#475569"
+                fontFamily="Plus Jakarta Sans, sans-serif"
+                letterSpacing="0.5px"
+                textAnchor="middle"
+              >
+                START
+              </text>
+
+              {/* DUE column header */}
+              <text
+                x={335}
+                y={24}
+                fontSize={10}
+                fontWeight={700}
+                fill="#475569"
+                fontFamily="Plus Jakarta Sans, sans-serif"
+                letterSpacing="0.5px"
+                textAnchor="middle"
+              >
+                DUE
               </text>
 
               {/* Sticky rows mapping label text */}
@@ -862,6 +892,8 @@ export function GanttClient({ project }: { project: Project }) {
                 return (
                   <g key={`sticky-label-${bar.id}`}>
                     <rect x={0} y={y} width={labelWidth} height={rowHeight} fill="#ffffff" />
+                    
+                    {/* Task name */}
                     <text
                       x={bar.isSubtask ? 28 : 16}
                       y={y + rowHeight / 2 + 4}
@@ -871,8 +903,35 @@ export function GanttClient({ project }: { project: Project }) {
                       fontFamily="Inter, sans-serif"
                       textDecoration={isDone ? "line-through" : undefined}
                     >
-                      {bar.name.length > 26 ? bar.name.slice(0, 25) + "…" : bar.name}
+                      {bar.name.length > 24 ? bar.name.slice(0, 22) + "…" : bar.name}
                     </text>
+
+                    {/* Start Date column text */}
+                    <text
+                      x={255}
+                      y={y + rowHeight / 2 + 4}
+                      fontSize={11}
+                      fontWeight={500}
+                      fill={isDone ? "#94a3b8" : "#475569"}
+                      fontFamily="Inter, sans-serif"
+                      textAnchor="middle"
+                    >
+                      {bar.start.toLocaleDateString("en-AU", { day: "numeric", month: "short" })}
+                    </text>
+
+                    {/* Due Date column text */}
+                    <text
+                      x={335}
+                      y={y + rowHeight / 2 + 4}
+                      fontSize={11}
+                      fontWeight={500}
+                      fill={isDone ? "#94a3b8" : "#475569"}
+                      fontFamily="Inter, sans-serif"
+                      textAnchor="middle"
+                    >
+                      {bar.end.toLocaleDateString("en-AU", { day: "numeric", month: "short" })}
+                    </text>
+
                     <line
                       x1={0}
                       y1={y + rowHeight}
@@ -885,6 +944,10 @@ export function GanttClient({ project }: { project: Project }) {
                   </g>
                 );
               })}
+
+              {/* Vertical list column grids */}
+              <line x1={215} y1={0} x2={215} y2={svgHeight + 40} stroke="#e2e8f0" strokeWidth={0.75} strokeOpacity={0.6} />
+              <line x1={295} y1={0} x2={295} y2={svgHeight + 40} stroke="#e2e8f0" strokeWidth={0.75} strokeOpacity={0.6} />
 
               {/* Vertical boundary separator line */}
               <line
