@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, BarChart3 } from "lucide-react";
+import { ChevronLeft, BarChart3, Download } from "lucide-react";
 import { PHASE_NAMES, PHASE_GANTT_COLORS } from "@/lib/utils";
 import { isBusinessDay } from "@/lib/holidays";
 import { formatAUDate, formatDuration } from "@/lib/dates";
+import { Button } from "@/components/ui/Button";
 
 type Project = NonNullable<Awaited<ReturnType<typeof import("@/actions/projects").getProject>>>;
 type ZoomLevel = "week" | "month" | "quarter";
@@ -45,6 +46,7 @@ interface GanttBarInfo {
 
 export function GanttClient({ project }: { project: Project }) {
   const [zoom, setZoom] = useState<ZoomLevel>("month");
+  const [scrollLeft, setScrollLeft] = useState(0);
   const [tooltip, setTooltip] = useState<{ bar: GanttBarInfo; x: number; y: number } | null>(null);
 
   const today = new Date();
@@ -150,6 +152,89 @@ export function GanttClient({ project }: { project: Project }) {
 
   const svgHeight = rows.length * rowHeight + 40;
 
+  // Scroll handler for sticky columns
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setScrollLeft(e.currentTarget.scrollLeft);
+  };
+
+  // Helper to get fully resolved self-contained SVG string
+  function getResolvedSVGSource(svgElement: SVGSVGElement) {
+    const serializer = new XMLSerializer();
+    let source = serializer.serializeToString(svgElement);
+    
+    // Replace CSS variables with explicit values for compatibility
+    source = source.replace(/var\(--bg-muted\)/g, "#f8fafc");
+    source = source.replace(/var\(--bg-surface\)/g, "#ffffff");
+    source = source.replace(/var\(--text-primary\)/g, "#0f172a");
+    source = source.replace(/var\(--text-secondary\)/g, "#475569");
+    source = source.replace(/var\(--text-tertiary\)/g, "#64748b");
+    source = source.replace(/var\(--border\)/g, "#e2e8f0");
+    source = source.replace(/var\(--accent\)/g, "#3b82f6");
+    
+    // Replace font variables with web-safe / system fallbacks
+    source = source.replace(/var\(--font-display\)/g, "Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif");
+    source = source.replace(/var\(--font-sans\)/g, "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif");
+
+    // Reset translation of the sticky labels column in the exported SVG source code
+    source = source.replace(
+      /(<g[^>]*id="sticky-left-col"[^>]*transform=")(translate\([^)]+\))("[^>]*>)/g,
+      `$1translate(0,0)$3`
+    );
+
+    if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+      source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    if (!source.match(/^<svg[^>]+xmlns\:xlink="http\:\/\/www\.w3\.org\/1999\/xlink"/)) {
+      source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+    }
+    
+    return '<?xml version="1.0" encoding="utf-8"?>\n' + source;
+  }
+
+  function exportSVG() {
+    const svg = document.getElementById("gantt-svg") as SVGSVGElement | null;
+    if (!svg) return;
+    const source = getResolvedSVGSource(svg);
+    const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${project.name.replace(/\s+/g, "-")}-gantt.svg`;
+    a.click();
+  }
+
+  function exportPNG() {
+    const svg = document.getElementById("gantt-svg") as SVGSVGElement | null;
+    if (!svg) return;
+    const width = totalWidth;
+    const height = svgHeight + 40;
+    const source = getResolvedSVGSource(svg);
+    const blob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.width = width;
+    img.height = height;
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const scale = 2; // High DPI export
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.scale(scale, scale);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0);
+        const pngUrl = canvas.toDataURL("image/png");
+        const a = document.createElement("a");
+        a.href = pngUrl;
+        a.download = `${project.name.replace(/\s+/g, "-")}-gantt.png`;
+        a.click();
+      }
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  }
+
   return (
     <div className="app-page max-w-[1240px] px-4 py-8 md:px-8">
       {/* Breadcrumb */}
@@ -161,7 +246,7 @@ export function GanttClient({ project }: { project: Project }) {
         {project.name}
       </Link>
 
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 pb-6 border-b border-slate-100">
+      <div className="mb-8 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 pb-6 border-b border-slate-100">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 font-display sm:text-4xl">
             Gantt Timeline
@@ -172,21 +257,46 @@ export function GanttClient({ project }: { project: Project }) {
           </p>
         </div>
 
-        {/* Apple Segmented control zoom filters */}
-        <div className="bg-slate-100 p-1 rounded-xl inline-flex gap-1.5 border border-slate-200/40">
-          {(["week", "month", "quarter"] as ZoomLevel[]).map((z) => (
-            <button
-              key={z}
-              onClick={() => setZoom(z)}
-              className={`rounded-lg px-4 py-1.5 capitalize transition-all text-[13px] font-bold cursor-pointer ${
-                zoom === z 
-                  ? "bg-slate-900 text-white shadow-sm" 
-                  : "text-slate-500 hover:text-slate-900"
-              }`}
+        {/* Controls block */}
+        <div className="flex flex-wrap items-center gap-4 self-start lg:self-auto">
+          {/* Export options */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={exportSVG}
+              className="gap-1.5 bg-white border-slate-200 text-xs font-bold"
             >
-              {z}
-            </button>
-          ))}
+              <Download className="w-3.5 h-3.5" />
+              SVG
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={exportPNG}
+              className="gap-1.5 bg-white border-slate-200 text-xs font-bold"
+            >
+              <Download className="w-3.5 h-3.5" />
+              PNG
+            </Button>
+          </div>
+
+          {/* Zoom controls */}
+          <div className="bg-slate-100 p-1 rounded-xl inline-flex gap-1.5 border border-slate-200/40">
+            {(["week", "month", "quarter"] as ZoomLevel[]).map((z) => (
+              <button
+                key={z}
+                onClick={() => setZoom(z)}
+                className={`rounded-lg px-4 py-1.5 capitalize transition-all text-[13px] font-bold cursor-pointer ${
+                  zoom === z 
+                    ? "bg-slate-900 text-white shadow-sm" 
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                {z}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -205,47 +315,63 @@ export function GanttClient({ project }: { project: Project }) {
           style={{
             maxHeight: "calc(100vh - 220px)",
           }}
+          onScroll={handleScroll}
         >
           <svg
+            id="gantt-svg"
             width={totalWidth}
             height={svgHeight + 40}
             style={{ display: "block", minWidth: "100%" }}
             onMouseLeave={() => setTooltip(null)}
           >
-            {/* Date header — months */}
+            {/* Date header — months & subheaders */}
             <MonthHeader
               days={allRangeDays}
               colWidth={colWidth}
               labelWidth={labelWidth}
+              zoom={zoom}
             />
 
-            {/* Column backgrounds */}
+            {/* Column backgrounds and grid lines */}
             {allRangeDays.map((day, i) => {
               const x = labelWidth + i * colWidth;
               const isWeekend = day.getDay() === 0 || day.getDay() === 6;
               const isHoliday = !isWeekend && !isBusinessDay(day);
               const isToday = day.toDateString() === today.toDateString();
+              const showGridLine = zoom === "week" || (zoom === "month" && day.getDay() === 1) || (zoom === "quarter" && day.getDay() === 1 && i % 2 === 0);
               return (
-                <rect
-                  key={i}
-                  x={x}
-                  y={0}
-                  width={colWidth}
-                  height={svgHeight + 40}
-                  fill={
-                    isToday
-                      ? "rgba(59,130,246,0.08)"
-                      : isWeekend
-                      ? "rgba(15,23,42,0.015)"
-                      : isHoliday
-                      ? "rgba(245,158,11,0.05)"
-                      : "transparent"
-                  }
-                />
+                <g key={i}>
+                  <rect
+                    x={x}
+                    y={0}
+                    width={colWidth}
+                    height={svgHeight + 40}
+                    fill={
+                      isToday
+                        ? "rgba(59,130,246,0.08)"
+                        : isWeekend
+                        ? "rgba(15,23,42,0.015)"
+                        : isHoliday
+                        ? "rgba(245,158,11,0.05)"
+                        : "transparent"
+                    }
+                  />
+                  {showGridLine && (
+                    <line
+                      x1={x}
+                      y1={40}
+                      x2={x}
+                      y2={svgHeight + 40}
+                      stroke="var(--border)"
+                      strokeWidth={0.5}
+                      strokeOpacity={0.4}
+                    />
+                  )}
+                </g>
               );
             })}
 
-            {/* Row backgrounds + labels */}
+            {/* Row backgrounds & bars (timeline area only) */}
             {rows.map((row, i) => {
               const y = 40 + i * rowHeight;
               if (row.type === "header") {
@@ -253,23 +379,21 @@ export function GanttClient({ project }: { project: Project }) {
                 return (
                   <g key={`header-${i}`}>
                     <rect
-                      x={0}
+                      x={labelWidth}
                       y={y}
-                      width={totalWidth}
+                      width={totalWidth - labelWidth}
                       height={rowHeight}
-                      fill={`${color}10`}
-                    />
-                    <text
-                      x={12}
-                      y={y + rowHeight / 2 + 4}
-                      fontSize={11}
-                      fontWeight={750}
                       fill={color}
-                      fontFamily="var(--font-display), sans-serif"
-                      letterSpacing="0.2px"
-                    >
-                      {row.phaseName.toUpperCase()}
-                    </text>
+                      fillOpacity={0.1}
+                    />
+                    <line
+                      x1={labelWidth}
+                      y1={y + rowHeight}
+                      x2={totalWidth}
+                      y2={y + rowHeight}
+                      stroke="var(--border)"
+                      strokeWidth={1}
+                    />
                   </g>
                 );
               }
@@ -281,26 +405,16 @@ export function GanttClient({ project }: { project: Project }) {
 
               return (
                 <g key={`bar-${bar.id}`}>
-                  {/* Row hover bg placeholder */}
-                  <rect
-                    x={0}
-                    y={y}
-                    width={totalWidth}
-                    height={rowHeight}
-                    fill="transparent"
+                  {/* Row divider line spanning timeline */}
+                  <line
+                    x1={labelWidth}
+                    y1={y + rowHeight}
+                    x2={totalWidth}
+                    y2={y + rowHeight}
+                    stroke="var(--border)"
+                    strokeWidth={0.5}
+                    strokeOpacity={0.4}
                   />
-                  {/* Label */}
-                  <text
-                    x={bar.isSubtask ? 28 : 16}
-                    y={y + rowHeight / 2 + 4}
-                    fontSize={12}
-                    fontWeight={bar.isSubtask ? 500 : 600}
-                    fill={isDone ? "#94a3b8" : "var(--text-primary)"}
-                    fontFamily="var(--font-sans), sans-serif"
-                    textDecoration={isDone ? "line-through" : undefined}
-                  >
-                    {bar.name.length > 26 ? bar.name.slice(0, 25) + "…" : bar.name}
-                  </text>
                   {/* Bar */}
                   <rect
                     x={x}
@@ -361,6 +475,104 @@ export function GanttClient({ project }: { project: Project }) {
             >
               Today
             </text>
+
+            {/* Sticky Left Column Overlay */}
+            <g id="sticky-left-col" transform={`translate(${scrollLeft}, 0)`}>
+              {/* White background overlay to block horizontal elements underneath */}
+              <rect x={0} y={0} width={labelWidth} height={svgHeight + 40} fill="#ffffff" />
+              
+              {/* Header block */}
+              <rect x={0} y={0} width={labelWidth} height={40} fill="#f8fafc" />
+              <line x1={0} y1={39} x2={labelWidth} y2={39} stroke="#e2e8f0" strokeWidth={1} />
+              <text
+                x={12}
+                y={24}
+                fontSize={10}
+                fontWeight={700}
+                fill="#475569"
+                fontFamily="Plus Jakarta Sans, sans-serif"
+                letterSpacing="0.5px"
+              >
+                TASKS & TIMELINE
+              </text>
+
+              {/* Sticky rows mapping label text */}
+              {rows.map((row, i) => {
+                const y = 40 + i * rowHeight;
+                if (row.type === "header") {
+                  const color = PHASE_GANTT_COLORS[row.phaseIndex];
+                  return (
+                    <g key={`sticky-header-${i}`}>
+                      <rect
+                        x={0}
+                        y={y}
+                        width={labelWidth}
+                        height={rowHeight}
+                        fill={color}
+                        fillOpacity={0.1}
+                      />
+                      <text
+                        x={12}
+                        y={y + rowHeight / 2 + 4}
+                        fontSize={11}
+                        fontWeight={750}
+                        fill={color}
+                        fontFamily="Plus Jakarta Sans, sans-serif"
+                        letterSpacing="0.2px"
+                      >
+                        {row.phaseName.toUpperCase()}
+                      </text>
+                      <line
+                        x1={0}
+                        y1={y + rowHeight}
+                        x2={labelWidth}
+                        y2={y + rowHeight}
+                        stroke="#e2e8f0"
+                        strokeWidth={1}
+                      />
+                    </g>
+                  );
+                }
+                const { bar } = row;
+                const isDone = bar.status === "DONE";
+
+                return (
+                  <g key={`sticky-label-${bar.id}`}>
+                    <rect x={0} y={y} width={labelWidth} height={rowHeight} fill="#ffffff" />
+                    <text
+                      x={bar.isSubtask ? 28 : 16}
+                      y={y + rowHeight / 2 + 4}
+                      fontSize={12}
+                      fontWeight={bar.isSubtask ? 500 : 600}
+                      fill={isDone ? "#94a3b8" : "#0f172a"}
+                      fontFamily="Inter, sans-serif"
+                      textDecoration={isDone ? "line-through" : undefined}
+                    >
+                      {bar.name.length > 26 ? bar.name.slice(0, 25) + "…" : bar.name}
+                    </text>
+                    <line
+                      x1={0}
+                      y1={y + rowHeight}
+                      x2={labelWidth}
+                      y2={y + rowHeight}
+                      stroke="#e2e8f0"
+                      strokeWidth={0.5}
+                      strokeOpacity={0.4}
+                    />
+                  </g>
+                );
+              })}
+
+              {/* Vertical boundary separator line */}
+              <line
+                x1={labelWidth}
+                y1={0}
+                x2={labelWidth}
+                y2={svgHeight + 40}
+                stroke="#e2e8f0"
+                strokeWidth={1.5}
+              />
+            </g>
           </svg>
 
           {/* Glassmorphic Tooltip */}
@@ -418,10 +630,12 @@ function MonthHeader({
   days,
   colWidth,
   labelWidth,
+  zoom,
 }: {
   days: Date[];
   colWidth: number;
   labelWidth: number;
+  zoom: ZoomLevel;
 }) {
   // Group consecutive days by month
   const months: { label: string; x: number; width: number }[] = [];
@@ -450,18 +664,14 @@ function MonthHeader({
 
   return (
     <g>
-      {/* Label column header */}
-      <rect x={0} y={0} width={labelWidth} height={40} fill="var(--bg-muted)" />
-      <rect x={0} y={38} width={labelWidth} height={2} fill="var(--border)" />
-
       {/* Month bands */}
       {months.map((m, i) => (
         <g key={i}>
-          <rect x={m.x} y={0} width={m.width} height={40} fill={i % 2 === 0 ? "var(--bg-muted)" : "var(--bg-surface)"} />
+          <rect x={m.x} y={0} width={m.width} height={22} fill={i % 2 === 0 ? "var(--bg-muted)" : "var(--bg-surface)"} />
           <text
             x={m.x + 8}
-            y={24}
-            fontSize={11}
+            y={15}
+            fontSize={10}
             fontWeight={750}
             fill="var(--text-secondary)"
             fontFamily="var(--font-display), sans-serif"
@@ -473,8 +683,79 @@ function MonthHeader({
         </g>
       ))}
 
-      {/* Bottom border */}
-      <line x1={0} y1={39} x2={labelWidth + days.length * colWidth} y2={39} stroke="var(--border)" strokeWidth={1} />
+      {/* Sub-header row for Days or Weeks */}
+      {zoom === "week" && days.map((day, i) => {
+        const x = labelWidth + i * colWidth;
+        const dayLabel = day.toLocaleDateString("en-AU", { weekday: "narrow" });
+        const dayNum = day.getDate();
+        const isToday = day.toDateString() === new Date().toDateString();
+        return (
+          <g key={i}>
+            <rect x={x} y={22} width={colWidth} height={18} fill={isToday ? "rgba(59,130,246,0.05)" : "transparent"} />
+            <text
+              x={x + colWidth / 2}
+              y={34}
+              fontSize={8}
+              fontWeight={isToday ? 800 : 600}
+              fill={isToday ? "var(--accent)" : "var(--text-tertiary)"}
+              textAnchor="middle"
+              fontFamily="var(--font-sans), sans-serif"
+            >
+              {dayLabel}{dayNum}
+            </text>
+          </g>
+        );
+      })}
+
+      {zoom === "month" && days.map((day, i) => {
+        // Show day numbers for Mondays
+        if (day.getDay() !== 1) return null;
+        const x = labelWidth + i * colWidth;
+        const dayNum = day.getDate();
+        return (
+          <g key={i}>
+            <text
+              x={x + colWidth / 2}
+              y={34}
+              fontSize={8}
+              fontWeight={700}
+              fill="var(--text-tertiary)"
+              textAnchor="middle"
+              fontFamily="var(--font-sans), sans-serif"
+            >
+              {dayNum}
+            </text>
+          </g>
+        );
+      })}
+
+      {zoom === "quarter" && days.map((day, i) => {
+        // Show weekly markers (e.g. W1, W2) or dates on Mondays
+        if (day.getDay() !== 1) return null;
+        const x = labelWidth + i * colWidth;
+        // Show date for the start of the week
+        const label = day.toLocaleDateString("en-AU", { day: "numeric", month: "numeric" });
+        // Only print every 2 weeks to avoid overcrowding in quarter view
+        if (i % 2 !== 0) return null;
+        return (
+          <g key={i}>
+            <text
+              x={x + colWidth / 2}
+              y={34}
+              fontSize={7.5}
+              fontWeight={600}
+              fill="var(--text-tertiary)"
+              textAnchor="middle"
+              fontFamily="var(--font-sans), sans-serif"
+            >
+              {label}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Bottom border line */}
+      <line x1={labelWidth} y1={39} x2={labelWidth + days.length * colWidth} y2={39} stroke="var(--border)" strokeWidth={1} />
     </g>
   );
 }
