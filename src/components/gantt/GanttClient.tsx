@@ -9,7 +9,7 @@ import { formatAUDate, formatDuration } from "@/lib/dates";
 import { Button } from "@/components/ui/Button";
 
 type Project = NonNullable<Awaited<ReturnType<typeof import("@/actions/projects").getProject>>>;
-type ZoomLevel = "week" | "month" | "quarter";
+type ZoomLevel = "day" | "week" | "month" | "quarter";
 
 function getDaysInRange(start: Date, end: Date): Date[] {
   const days: Date[] = [];
@@ -28,6 +28,25 @@ function addDays(d: Date, n: number): Date {
   const r = new Date(d);
   r.setDate(r.getDate() + n);
   return r;
+}
+
+function parseAsLocalDate(dateInput: Date | string | null): Date {
+  if (!dateInput) return new Date();
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return new Date();
+  
+  if (typeof dateInput === "string") {
+    const match = dateInput.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1;
+      const day = parseInt(match[3], 10);
+      return new Date(year, month, day, 0, 0, 0, 0);
+    }
+  } else if (dateInput instanceof Date) {
+    return new Date(dateInput.getFullYear(), dateInput.getMonth(), dateInput.getDate(), 0, 0, 0, 0);
+  }
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
 }
 
 interface GanttBarInfo {
@@ -54,15 +73,15 @@ export function GanttClient({ project }: { project: Project }) {
 
   // Collect all bars
   const bars: GanttBarInfo[] = [];
-  for (const phase of project.phases.sort((a, b) => a.order - b.order)) {
+  for (const phase of [...project.phases].sort((a: { order: number }, b: { order: number }) => a.order - b.order)) {
     const phaseIndex = phase.order;
-    for (const task of phase.tasks.sort((a, b) => a.order - b.order)) {
+    for (const task of [...phase.tasks].sort((a: { order: number }, b: { order: number }) => a.order - b.order)) {
       if (task.startDate && task.dueDate) {
         bars.push({
           id: task.id,
           name: task.name,
-          start: new Date(task.startDate),
-          end: new Date(task.dueDate),
+          start: parseAsLocalDate(task.startDate),
+          end: parseAsLocalDate(task.dueDate),
           status: task.status,
           priority: task.priority,
           phaseIndex,
@@ -77,8 +96,8 @@ export function GanttClient({ project }: { project: Project }) {
           bars.push({
             id: sub.id,
             name: sub.name,
-            start: new Date(sub.startDate),
-            end: new Date(sub.dueDate),
+            start: parseAsLocalDate(sub.startDate),
+            end: parseAsLocalDate(sub.dueDate),
             status: sub.status,
             priority: sub.priority,
             phaseIndex,
@@ -109,21 +128,19 @@ export function GanttClient({ project }: { project: Project }) {
 
   const allRangeDays = getDaysInRange(rangeStart, rangeEnd);
 
-  const colWidth = zoom === "week" ? 40 : zoom === "month" ? 24 : 14;
+  const colWidth = zoom === "day" ? 64 : zoom === "week" ? 40 : zoom === "month" ? 24 : 14;
   const rowHeight = 36;
   const labelWidth = 240;
 
   function dayToX(date: Date): number {
-    const diff = Math.floor((date.getTime() - rangeStart.getTime()) / 86400000);
+    const diff = Math.round((date.getTime() - rangeStart.getTime()) / 86400000);
     return labelWidth + diff * colWidth;
   }
 
   function barStyle(bar: GanttBarInfo) {
     const x = dayToX(bar.start);
-    const w = Math.max(
-      colWidth,
-      Math.floor((bar.end.getTime() - bar.start.getTime()) / 86400000) * colWidth + colWidth
-    );
+    const diffDays = Math.round((bar.end.getTime() - bar.start.getTime()) / 86400000);
+    const w = Math.max(colWidth, diffDays * colWidth + colWidth);
     return { x, w };
   }
 
@@ -283,7 +300,7 @@ export function GanttClient({ project }: { project: Project }) {
 
           {/* Zoom controls */}
           <div className="bg-slate-100 p-1 rounded-xl inline-flex gap-1.5 border border-slate-200/40">
-            {(["week", "month", "quarter"] as ZoomLevel[]).map((z) => (
+            {(["day", "week", "month", "quarter"] as ZoomLevel[]).map((z) => (
               <button
                 key={z}
                 onClick={() => setZoom(z)}
@@ -338,7 +355,7 @@ export function GanttClient({ project }: { project: Project }) {
               const isWeekend = day.getDay() === 0 || day.getDay() === 6;
               const isHoliday = !isWeekend && !isBusinessDay(day);
               const isToday = day.toDateString() === today.toDateString();
-              const showGridLine = zoom === "week" || (zoom === "month" && day.getDay() === 1) || (zoom === "quarter" && day.getDay() === 1 && i % 2 === 0);
+              const showGridLine = zoom === "day" || zoom === "week" || (zoom === "month" && day.getDay() === 1) || (zoom === "quarter" && day.getDay() === 1 && i % 2 === 0);
               return (
                 <g key={i}>
                   <rect
@@ -684,6 +701,29 @@ function MonthHeader({
       ))}
 
       {/* Sub-header row for Days or Weeks */}
+      {zoom === "day" && days.map((day, i) => {
+        const x = labelWidth + i * colWidth;
+        const dayLabel = day.toLocaleDateString("en-AU", { weekday: "short" });
+        const dayNum = day.getDate();
+        const isToday = day.toDateString() === new Date().toDateString();
+        return (
+          <g key={i}>
+            <rect x={x} y={22} width={colWidth} height={18} fill={isToday ? "rgba(59,130,246,0.05)" : "transparent"} />
+            <text
+              x={x + colWidth / 2}
+              y={34}
+              fontSize={8}
+              fontWeight={isToday ? 800 : 600}
+              fill={isToday ? "var(--accent)" : "var(--text-tertiary)"}
+              textAnchor="middle"
+              fontFamily="var(--font-sans), sans-serif"
+            >
+              {dayLabel} {dayNum}
+            </text>
+          </g>
+        );
+      })}
+
       {zoom === "week" && days.map((day, i) => {
         const x = labelWidth + i * colWidth;
         const dayLabel = day.toLocaleDateString("en-AU", { weekday: "narrow" });
