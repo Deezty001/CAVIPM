@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { ChevronLeft, BarChart3, Download } from "lucide-react";
 import { PHASE_NAMES, PHASE_GANTT_COLORS } from "@/lib/utils";
 import { isBusinessDay } from "@/lib/holidays";
 import { formatAUDate, formatDuration } from "@/lib/dates";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Modal } from "@/components/ui/Modal";
+import { createTask, updateTask } from "@/actions/tasks";
 
 type Project = NonNullable<Awaited<ReturnType<typeof import("@/actions/projects").getProject>>>;
 type ZoomLevel = "day" | "week" | "month" | "quarter";
@@ -56,6 +60,7 @@ interface GanttBarInfo {
   end: Date;
   status: string;
   priority: string;
+  phaseId: string;
   phaseIndex: number;
   phaseName: string;
   assigneeText: string | null;
@@ -65,11 +70,36 @@ interface GanttBarInfo {
 
 export function GanttClient({ project }: { project: Project }) {
   const [zoom, setZoom] = useState<ZoomLevel>("month");
+  const [colorMode, setColorMode] = useState<"phase" | "status" | "priority">("phase");
   const [scrollLeft, setScrollLeft] = useState(0);
   const [tooltip, setTooltip] = useState<{ bar: GanttBarInfo; x: number; y: number } | null>(null);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  // Dragging interaction states
+  const [dragState, setDragState] = useState<{
+    taskId: string;
+    isSubtask: boolean;
+    type: "move" | "resize-start" | "resize-end";
+    initialStart: Date;
+    initialEnd: Date;
+    startX: number;
+  } | null>(null);
+  const [tempDates, setTempDates] = useState<{
+    [taskId: string]: { start: Date; end: Date };
+  }>({});
+
+  // Quick task creation states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalPhaseId, setModalPhaseId] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newStart, setNewStart] = useState("");
+  const [newEnd, setNewEnd] = useState("");
+  const [newPriority, setNewPriority] = useState("NORMAL");
+  const [newAssigneeId, setNewAssigneeId] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   // Collect all bars
   const bars: GanttBarInfo[] = [];
@@ -77,13 +107,15 @@ export function GanttClient({ project }: { project: Project }) {
     const phaseIndex = phase.order;
     for (const task of [...phase.tasks].sort((a: { order: number }, b: { order: number }) => a.order - b.order)) {
       if (task.startDate && task.dueDate) {
+        const override = tempDates[task.id];
         bars.push({
           id: task.id,
           name: task.name,
-          start: parseAsLocalDate(task.startDate),
-          end: parseAsLocalDate(task.dueDate),
+          start: override?.start ?? parseAsLocalDate(task.startDate),
+          end: override?.end ?? parseAsLocalDate(task.dueDate),
           status: task.status,
           priority: task.priority,
+          phaseId: phase.id,
           phaseIndex,
           phaseName: phase.name,
           assigneeText: task.assigneeText ?? task.assignee?.name ?? null,
@@ -93,13 +125,15 @@ export function GanttClient({ project }: { project: Project }) {
       }
       for (const sub of task.subtasks) {
         if (sub.startDate && sub.dueDate) {
+          const override = tempDates[sub.id];
           bars.push({
             id: sub.id,
             name: sub.name,
-            start: parseAsLocalDate(sub.startDate),
-            end: parseAsLocalDate(sub.dueDate),
+            start: override?.start ?? parseAsLocalDate(sub.startDate),
+            end: override?.end ?? parseAsLocalDate(sub.dueDate),
             status: sub.status,
             priority: sub.priority,
+            phaseId: phase.id,
             phaseIndex,
             phaseName: phase.name,
             assigneeText: sub.assigneeText ?? sub.assignee?.name ?? null,
@@ -148,20 +182,19 @@ export function GanttClient({ project }: { project: Project }) {
   const todayX = dayToX(today);
 
   // Group bars by phase
-  const phaseGroups: { phaseIndex: number; phaseName: string; bars: GanttBarInfo[] }[] = [];
-  for (const phaseName of PHASE_NAMES) {
-    const phaseIndex = PHASE_NAMES.indexOf(phaseName);
-    const phaseBars = bars.filter((b) => b.phaseIndex === phaseIndex);
+  const phaseGroups: { phaseId: string; phaseIndex: number; phaseName: string; bars: GanttBarInfo[] }[] = [];
+  for (const phase of [...project.phases].sort((a: { order: number }, b: { order: number }) => a.order - b.order)) {
+    const phaseBars = bars.filter((b) => b.phaseId === phase.id);
     if (phaseBars.length > 0) {
-      phaseGroups.push({ phaseIndex, phaseName, bars: phaseBars });
+      phaseGroups.push({ phaseId: phase.id, phaseIndex: phase.order, phaseName: phase.name, bars: phaseBars });
     }
   }
 
   // Flatten with section headers
-  type Row = { type: "header"; phaseName: string; phaseIndex: number } | { type: "bar"; bar: GanttBarInfo };
+  type Row = { type: "header"; phaseId: string; phaseName: string; phaseIndex: number } | { type: "bar"; bar: GanttBarInfo };
   const rows: Row[] = [];
   for (const group of phaseGroups) {
-    rows.push({ type: "header", phaseName: group.phaseName, phaseIndex: group.phaseIndex });
+    rows.push({ type: "header", phaseId: group.phaseId, phaseName: group.phaseName, phaseIndex: group.phaseIndex });
     for (const bar of group.bars) {
       rows.push({ type: "bar", bar });
     }
@@ -174,7 +207,173 @@ export function GanttClient({ project }: { project: Project }) {
     setScrollLeft(e.currentTarget.scrollLeft);
   };
 
-  // Helper to get fully resolved self-contained SVG string
+  // Dragging event handlers
+  const handlePointerDown = (
+    e: React.PointerEvent<SVGElement>,
+    taskId: string,
+    isSubtask: boolean,
+    type: "move" | "resize-start" | "resize-end",
+    initialStart: Date,
+    initialEnd: Date
+  ) => {
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDragState({
+      taskId,
+      isSubtask,
+      type,
+      initialStart,
+      initialEnd,
+      startX: e.clientX,
+    });
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<SVGElement>) => {
+    if (!dragState) return;
+    const dx = e.clientX - dragState.startX;
+    const daysMoved = Math.round(dx / colWidth);
+    
+    let newStart = new Date(dragState.initialStart);
+    let newEnd = new Date(dragState.initialEnd);
+    
+    if (dragState.type === "move") {
+      newStart = addDays(dragState.initialStart, daysMoved);
+      newEnd = addDays(dragState.initialEnd, daysMoved);
+    } else if (dragState.type === "resize-start") {
+      newStart = addDays(dragState.initialStart, daysMoved);
+      if (newStart.getTime() > dragState.initialEnd.getTime()) {
+        newStart = new Date(dragState.initialEnd);
+      }
+    } else if (dragState.type === "resize-end") {
+      newEnd = addDays(dragState.initialEnd, daysMoved);
+      if (newEnd.getTime() < dragState.initialStart.getTime()) {
+        newEnd = new Date(dragState.initialStart);
+      }
+    }
+    
+    setTempDates((prev) => ({
+      ...prev,
+      [dragState.taskId]: { start: newStart, end: newEnd },
+    }));
+  };
+
+  const handlePointerUp = async (e: React.PointerEvent<SVGElement>) => {
+    if (!dragState) return;
+    e.currentTarget.releasePointerCapture(e.pointerId);
+    
+    const finalDates = tempDates[dragState.taskId];
+    const taskId = dragState.taskId;
+    
+    setDragState(null);
+    
+    if (finalDates) {
+      const calendarDays = Math.round((finalDates.end.getTime() - finalDates.start.getTime()) / 86400000) + 1;
+      
+      startTransition(async () => {
+        try {
+          await updateTask(taskId, project.id, {
+            startDate: finalDates.start,
+            dueDate: finalDates.end,
+            duration: calendarDays,
+          });
+        } catch (err) {
+          console.error("Failed to update task dates", err);
+        }
+      });
+      
+      setTimeout(() => {
+        setTempDates((prev) => {
+          const next = { ...prev };
+          delete next[taskId];
+          return next;
+        });
+      }, 500);
+    }
+  };
+
+  // Quick task creation
+  const openQuickAdd = (phaseId: string, initialDate?: Date) => {
+    setModalPhaseId(phaseId);
+    setNewName("");
+    setNewPriority("NORMAL");
+    setNewAssigneeId("");
+    
+    const dateObj = initialDate ?? new Date();
+    const formattedDate = dateObj.toISOString().split("T")[0];
+    setNewStart(formattedDate);
+    setNewEnd(formattedDate);
+    
+    setIsModalOpen(true);
+  };
+
+  const handleQuickAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName.trim() || !modalPhaseId) return;
+    
+    setIsSubmitting(true);
+    
+    const selectedContact = project.contacts.find((c) => c.id === newAssigneeId);
+    const assigneeText = selectedContact?.name ?? "";
+    
+    const startD = newStart ? new Date(newStart) : undefined;
+    const endD = newEnd ? new Date(newEnd) : undefined;
+    let duration: number | undefined = undefined;
+    
+    if (startD && endD) {
+      duration = Math.round((endD.getTime() - startD.getTime()) / 86400000) + 1;
+    }
+    
+    startTransition(async () => {
+      try {
+        await createTask({
+          name: newName,
+          phaseId: modalPhaseId,
+          projectId: project.id,
+          startDate: startD,
+          dueDate: endD,
+          duration,
+          priority: newPriority,
+          assigneeId: newAssigneeId || undefined,
+          assigneeText,
+          status: "TODO",
+        });
+        setIsModalOpen(false);
+      } catch (err) {
+        console.error("Failed to create task", err);
+      } finally {
+        setIsSubmitting(false);
+      }
+    });
+  };
+
+  // Color mappers
+  function getBarColor(bar: GanttBarInfo): string {
+    if (colorMode === "phase") {
+      return PHASE_GANTT_COLORS[bar.phaseIndex] || "#64748b";
+    }
+    if (colorMode === "status") {
+      if (bar.status === "DONE") return "#10b981";
+      if (bar.status === "IN_PROGRESS") return "#f97316";
+      if (bar.status === "BLOCKED") return "#ef4444";
+      return "#64748b";
+    }
+    if (colorMode === "priority") {
+      if (bar.priority === "URGENT") return "#ef4444";
+      if (bar.priority === "HIGH") return "#f59e0b";
+      if (bar.priority === "NORMAL") return "#3b82f6";
+      return "#94a3b8";
+    }
+    return "#64748b";
+  }
+
+  function getProgressValue(status: string): number {
+    if (status === "DONE") return 1.0;
+    if (status === "IN_PROGRESS") return 0.5;
+    if (status === "BLOCKED") return 0.25;
+    return 0.0;
+  }
+
+  // Helper to get fully resolved self-contained SVG string for export
   function getResolvedSVGSource(svgElement: SVGSVGElement) {
     const serializer = new XMLSerializer();
     let source = serializer.serializeToString(svgElement);
@@ -298,6 +497,23 @@ export function GanttClient({ project }: { project: Project }) {
             </Button>
           </div>
 
+          {/* Color Mode controls */}
+          <div className="bg-slate-100 p-1 rounded-xl inline-flex gap-1.5 border border-slate-200/40">
+            {(["phase", "status", "priority"] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setColorMode(mode)}
+                className={`rounded-lg px-3.5 py-1.5 capitalize transition-all text-[12px] font-bold cursor-pointer ${
+                  colorMode === mode 
+                    ? "bg-slate-900 text-white shadow-sm" 
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                {mode === "phase" ? "Phase" : mode === "status" ? "Status" : "Priority"}
+              </button>
+            ))}
+          </div>
+
           {/* Zoom controls */}
           <div className="bg-slate-100 p-1 rounded-xl inline-flex gap-1.5 border border-slate-200/40">
             {(["day", "week", "month", "quarter"] as ZoomLevel[]).map((z) => (
@@ -328,7 +544,7 @@ export function GanttClient({ project }: { project: Project }) {
         </div>
       ) : (
         <div
-          className="surface-card overflow-auto border border-slate-100 rounded-2xl bg-white shadow-sm scrollbar-thin"
+          className="surface-card overflow-auto border border-slate-100 rounded-2xl bg-white shadow-sm scrollbar-thin select-none"
           style={{
             maxHeight: "calc(100vh - 220px)",
           }}
@@ -340,6 +556,8 @@ export function GanttClient({ project }: { project: Project }) {
             height={svgHeight + 40}
             style={{ display: "block", minWidth: "100%" }}
             onMouseLeave={() => setTooltip(null)}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
           >
             {/* Date header — months & subheaders */}
             <MonthHeader
@@ -392,7 +610,7 @@ export function GanttClient({ project }: { project: Project }) {
             {rows.map((row, i) => {
               const y = 40 + i * rowHeight;
               if (row.type === "header") {
-                const color = PHASE_GANTT_COLORS[row.phaseIndex];
+                const color = PHASE_GANTT_COLORS[row.phaseIndex] || "#64748b";
                 return (
                   <g key={`header-${i}`}>
                     <rect
@@ -416,12 +634,32 @@ export function GanttClient({ project }: { project: Project }) {
               }
               const { bar } = row;
               const { x, w } = barStyle(bar);
-              const color = PHASE_GANTT_COLORS[bar.phaseIndex];
-              const isDone = bar.status === "DONE";
+              const color = getBarColor(bar);
               const isBlocked = bar.status === "BLOCKED";
+              const progress = getProgressValue(bar.status);
+              
+              const barY = y + (bar.isSubtask ? 10 : 8);
+              const barH = bar.isSubtask ? rowHeight - 20 : rowHeight - 16;
 
               return (
                 <g key={`bar-${bar.id}`}>
+                  {/* Row click catcher background for double click quick add */}
+                  <rect
+                    x={labelWidth}
+                    y={y}
+                    width={totalWidth - labelWidth}
+                    height={rowHeight}
+                    fill="transparent"
+                    style={{ cursor: "pointer" }}
+                    onDoubleClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const clickX = e.clientX - rect.left;
+                      const diffDays = Math.round(clickX / colWidth);
+                      const clickedDate = addDays(rangeStart, diffDays);
+                      openQuickAdd(bar.phaseId, clickedDate);
+                    }}
+                  />
+
                   {/* Row divider line spanning timeline */}
                   <line
                     x1={labelWidth}
@@ -432,18 +670,44 @@ export function GanttClient({ project }: { project: Project }) {
                     strokeWidth={0.5}
                     strokeOpacity={0.4}
                   />
-                  {/* Bar */}
+
+                  {/* Main translucent bar background */}
                   <rect
                     x={x}
-                    y={y + (bar.isSubtask ? 10 : 8)}
+                    y={barY}
                     width={Math.max(w, 5)}
-                    height={bar.isSubtask ? rowHeight - 20 : rowHeight - 16}
+                    height={barH}
                     rx={5}
-                    fill={isDone ? "#cbd5e1" : color}
-                    fillOpacity={isDone ? 1 : 0.85}
+                    fill={color}
+                    fillOpacity={0.25}
                     stroke={isBlocked ? "#ef4444" : "transparent"}
                     strokeWidth={isBlocked ? 2 : 0}
-                    style={{ cursor: "pointer" }}
+                  />
+
+                  {/* Solid progress fill bar */}
+                  {progress > 0 && (
+                    <rect
+                      x={x}
+                      y={barY}
+                      width={Math.max(w * progress, 0)}
+                      height={barH}
+                      rx={5}
+                      fill={color}
+                      fillOpacity={0.85}
+                    />
+                  )}
+
+                  {/* Draggable center overlay body */}
+                  <rect
+                    x={x + 6}
+                    y={barY}
+                    width={Math.max(w - 12, 0)}
+                    height={barH}
+                    fill="transparent"
+                    style={{ cursor: "move" }}
+                    onPointerDown={(e) =>
+                      handlePointerDown(e, bar.id, bar.isSubtask, "move", bar.start, bar.end)
+                    }
                     onMouseEnter={(e) => {
                       setTooltip({
                         bar,
@@ -453,7 +717,34 @@ export function GanttClient({ project }: { project: Project }) {
                     }}
                     onMouseLeave={() => setTooltip(null)}
                   />
-                  {/* Bar label */}
+
+                  {/* Resize left handle */}
+                  <rect
+                    x={x}
+                    y={barY}
+                    width={6}
+                    height={barH}
+                    fill="transparent"
+                    style={{ cursor: "w-resize" }}
+                    onPointerDown={(e) =>
+                      handlePointerDown(e, bar.id, bar.isSubtask, "resize-start", bar.start, bar.end)
+                    }
+                  />
+
+                  {/* Resize right handle */}
+                  <rect
+                    x={x + w - 6}
+                    y={barY}
+                    width={6}
+                    height={barH}
+                    fill="transparent"
+                    style={{ cursor: "e-resize" }}
+                    onPointerDown={(e) =>
+                      handlePointerDown(e, bar.id, bar.isSubtask, "resize-end", bar.start, bar.end)
+                    }
+                  />
+
+                  {/* Bar text label */}
                   {w > 65 && (
                     <text
                       x={x + 8}
@@ -517,7 +808,7 @@ export function GanttClient({ project }: { project: Project }) {
               {rows.map((row, i) => {
                 const y = 40 + i * rowHeight;
                 if (row.type === "header") {
-                  const color = PHASE_GANTT_COLORS[row.phaseIndex];
+                  const color = PHASE_GANTT_COLORS[row.phaseIndex] || "#64748b";
                   return (
                     <g key={`sticky-header-${i}`}>
                       <rect
@@ -539,6 +830,21 @@ export function GanttClient({ project }: { project: Project }) {
                       >
                         {row.phaseName.toUpperCase()}
                       </text>
+                      {/* Plus button to add task */}
+                      <g
+                        style={{ cursor: "pointer" }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openQuickAdd(row.phaseId);
+                        }}
+                      >
+                        <circle cx={labelWidth - 24} cy={y + rowHeight / 2} r={8} fill={color} fillOpacity={0.15} />
+                        <path
+                          d={`M${labelWidth - 24} ${y + rowHeight / 2 - 4} L${labelWidth - 24} ${y + rowHeight / 2 + 4} M${labelWidth - 28} ${y + rowHeight / 2} L${labelWidth - 20} ${y + rowHeight / 2}`}
+                          stroke={color}
+                          strokeWidth={1.5}
+                        />
+                      </g>
                       <line
                         x1={0}
                         y1={y + rowHeight}
@@ -639,6 +945,68 @@ export function GanttClient({ project }: { project: Project }) {
           )}
         </div>
       )}
+
+      {/* Quick Add Modal */}
+      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} title="Quick Add Task">
+        <form onSubmit={handleQuickAddSubmit} className="space-y-4 pt-2">
+          <Input
+            label="Task Name"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            required
+            placeholder="e.g. Draft structural plans"
+            disabled={isSubmitting}
+          />
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              type="date"
+              label="Start Date"
+              value={newStart}
+              onChange={(e) => setNewStart(e.target.value)}
+              disabled={isSubmitting}
+            />
+            <Input
+              type="date"
+              label="Due Date"
+              value={newEnd}
+              onChange={(e) => setNewEnd(e.target.value)}
+              disabled={isSubmitting}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Select
+              label="Priority"
+              value={newPriority}
+              onChange={(e) => setNewPriority(e.target.value)}
+              options={[
+                { value: "LOW", label: "Low" },
+                { value: "NORMAL", label: "Normal" },
+                { value: "HIGH", label: "High" },
+                { value: "URGENT", label: "Urgent" },
+              ]}
+              disabled={isSubmitting}
+            />
+            <Select
+              label="Assignee"
+              value={newAssigneeId}
+              onChange={(e) => setNewAssigneeId(e.target.value)}
+              options={[
+                { value: "", label: "No Assignee" },
+                ...project.contacts.map((c) => ({ value: c.id, label: c.name })),
+              ]}
+              disabled={isSubmitting}
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
+            <Button variant="ghost" type="button" onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create Task"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
@@ -748,7 +1116,6 @@ function MonthHeader({
       })}
 
       {zoom === "month" && days.map((day, i) => {
-        // Show day numbers for Mondays
         if (day.getDay() !== 1) return null;
         const x = labelWidth + i * colWidth;
         const dayNum = day.getDate();
@@ -770,12 +1137,9 @@ function MonthHeader({
       })}
 
       {zoom === "quarter" && days.map((day, i) => {
-        // Show weekly markers (e.g. W1, W2) or dates on Mondays
         if (day.getDay() !== 1) return null;
         const x = labelWidth + i * colWidth;
-        // Show date for the start of the week
         const label = day.toLocaleDateString("en-AU", { day: "numeric", month: "numeric" });
-        // Only print every 2 weeks to avoid overcrowding in quarter view
         if (i % 2 !== 0) return null;
         return (
           <g key={i}>
