@@ -24,56 +24,56 @@ export const PHASE_NAMES = [
 ] as const;
 
 export const PHASE_COLORS = [
-  "bg-[#eeeaf7] text-[#534a82] border-[#ded7ef]",
-  "bg-[#ebf0f7] text-[#2d4f7c] border-[#d8e1ed]",
-  "bg-[#f5ede7] text-[#8a4e38] border-[#ead9cf]",
-  "bg-[#ebf5ee] text-[#3d7a55] border-[#d7eadc]",
-  "bg-[#f7f0e5] text-[#96702a] border-[#eadfc8]",
-  "bg-[#f0f0ee] text-[#6b6b6b] border-[#e0e0de]",
+  "bg-purple-50 text-purple-700 border-purple-100",
+  "bg-blue-50 text-blue-700 border-blue-100",
+  "bg-orange-50 text-orange-700 border-orange-100",
+  "bg-emerald-50 text-emerald-700 border-emerald-100",
+  "bg-amber-50 text-amber-700 border-amber-100",
+  "bg-slate-50 text-slate-600 border-slate-200",
 ] as const;
 
 export const PHASE_BAR_COLORS = [
-  "bg-[#7a6faf]",
-  "bg-[#4a6fa5]",
-  "bg-[#b8735a]",
-  "bg-[#3d7a55]",
-  "bg-[#96702a]",
-  "bg-[#a0a0a0]",
+  "bg-purple-500",
+  "bg-blue-500",
+  "bg-orange-500",
+  "bg-emerald-500",
+  "bg-amber-500",
+  "bg-slate-400",
 ] as const;
 
 export const PHASE_GANTT_COLORS = [
-  "#7a6faf",
-  "#4a6fa5",
-  "#b8735a",
-  "#3d7a55",
-  "#96702a",
-  "#a0a0a0",
+  "#a855f7",
+  "#3b82f6",
+  "#f97316",
+  "#10b981",
+  "#f59e0b",
+  "#64748b",
 ] as const;
 
 export const STATUS_CONFIG = {
   TODO: {
     label: "To Do",
-    className: "bg-[#f0f0ee] text-[#6b6b6b] border-[#e0e0de]",
+    className: "bg-slate-50 text-slate-600 border-slate-200",
   },
   IN_PROGRESS: {
     label: "In Progress",
-    className: "bg-[#f5ede7] text-[#8a4e38] border-[#ead9cf]",
+    className: "bg-orange-50 text-orange-700 border-orange-150",
   },
   DONE: {
     label: "Done",
-    className: "bg-[#ebf5ee] text-[#3d7a55] border-[#d7eadc]",
+    className: "bg-emerald-50 text-emerald-700 border-emerald-150",
   },
   BLOCKED: {
     label: "Blocked",
-    className: "bg-[#f7ebeb] text-[#a03535] border-[#ecd3d3]",
+    className: "bg-red-50 text-red-700 border-red-150",
   },
 } as const;
 
 export const PRIORITY_CONFIG = {
-  LOW: { label: "Low", className: "text-slate-400" },
-  NORMAL: { label: "Normal", className: "text-slate-600" },
-  HIGH: { label: "High", className: "text-amber-600" },
-  URGENT: { label: "Urgent", className: "text-red-600" },
+  LOW: { label: "Low", className: "text-slate-400 font-medium" },
+  NORMAL: { label: "Normal", className: "text-slate-600 font-medium" },
+  HIGH: { label: "High", className: "text-amber-600 font-bold" },
+  URGENT: { label: "Urgent", className: "text-red-600 font-bold" },
 } as const;
 
 export const PROJECT_TYPE_LABELS: Record<string, string> = {

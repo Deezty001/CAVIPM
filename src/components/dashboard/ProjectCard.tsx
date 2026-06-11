@@ -57,7 +57,7 @@ function computePhaseStats(phases: ProjectCardProps["project"]["phases"]): Phase
   });
 }
 
-export function ProjectCard({ project, index }: ProjectCardProps) {
+export function ProjectCard({ project }: ProjectCardProps) {
   const phaseStats = computePhaseStats(project.phases);
   const totalTasks = phaseStats.reduce((a, p) => a + p.total, 0);
   const doneTasks = phaseStats.reduce((a, p) => a + p.done, 0);
@@ -67,110 +67,108 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
   ).length;
   const pct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
-  const staggerClass = `stagger-${Math.min(index + 1, 6)}`;
-
   return (
     <Link
       href={`/projects/${project.id}`}
-      className={`surface-card group block opacity-0 transition-transform duration-150 hover:-translate-y-0.5 animate-fade-up ${staggerClass}`}
+      className="surface-card group block overflow-hidden border border-slate-100 hover:border-slate-200/80 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 h-full cursor-pointer"
     >
-      <div className="p-6">
-        <div className="mb-5 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h3
-              className="mb-1 truncate text-[17px] font-bold leading-[1.3] tracking-[-0.2px]"
-            >
-              {project.name}
-            </h3>
-            <div
-              className="flex items-center gap-1 text-xs text-[#6b6b6b]"
-            >
-              <MapPin className="w-3 h-3 shrink-0" />
-              <span className="truncate">{project.suburb || project.address}</span>
+      <div className="p-6 flex flex-col h-full justify-between">
+        <div>
+          {/* Header section */}
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="mb-1 truncate text-lg font-bold text-slate-800 font-display transition-colors group-hover:text-blue-600 leading-tight">
+                {project.name}
+              </h3>
+              <div className="flex items-center gap-1 text-xs text-slate-500 font-medium">
+                <MapPin className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                <span className="truncate">{project.suburb || project.address}</span>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Badge
+                className={
+                  project.status === "ACTIVE"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                    : project.status === "ON_HOLD"
+                    ? "bg-amber-50 text-amber-700 border-amber-100"
+                    : "bg-slate-50 text-slate-600 border-slate-200"
+                }
+              >
+                {project.status === "ACTIVE"
+                  ? "Active"
+                  : project.status === "ON_HOLD"
+                  ? "On Hold"
+                  : "Complete"}
+              </Badge>
+              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-400 transition-all duration-300 group-hover:bg-blue-600 group-hover:border-blue-600 group-hover:text-white">
+                <ArrowUpRight size={14} strokeWidth={2} />
+              </span>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Badge
-              className={
-                project.status === "ACTIVE"
-                  ? "bg-[#ebf5ee] text-[#3d7a55] border-transparent"
-                  : project.status === "ON_HOLD"
-                  ? "bg-[#f7f0e5] text-[#96702a] border-transparent"
-                  : "bg-[#f0f0ee] text-[#6b6b6b] border-transparent"
-              }
-            >
-              {project.status === "ACTIVE"
-                ? "Active"
-                : project.status === "ON_HOLD"
-                ? "On Hold"
-                : "Complete"}
-            </Badge>
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#f5f5f3] text-[#6b6b6b] transition-colors group-hover:bg-[#111111] group-hover:text-white">
-              <ArrowUpRight size={14} strokeWidth={1.5} />
-            </span>
-          </div>
-        </div>
 
-        <div className="mb-5 flex items-center gap-3">
-          <span
-            className="rounded-full bg-[#f0f0ee] px-2 py-[3px] text-[11px] font-medium text-[#6b6b6b]"
-          >
-            {PROJECT_TYPE_LABELS[project.type] ?? project.type}
-          </span>
-          {project.lotCount && (
-            <span
-              className="flex items-center gap-1 text-xs text-[#6b6b6b]"
-            >
-              <Layers className="w-3 h-3" />
-              {project.lotCount} lots
+          {/* Details labels */}
+          <div className="mb-6 flex flex-wrap items-center gap-2">
+            <span className="rounded-lg bg-slate-100/80 border border-slate-200/35 px-2.5 py-1 text-[11px] font-bold text-slate-600">
+              {PROJECT_TYPE_LABELS[project.type] ?? project.type}
             </span>
-          )}
-        </div>
-
-        <div className="mb-4">
-          <div className="mb-2 flex items-center justify-between text-xs">
-            <span className="text-[#6b6b6b]">Overall progress</span>
-            <span className="font-semibold text-[#111111]">{pct}%</span>
-          </div>
-          <div className="flex gap-1" aria-label="Phase progress">
-          {phaseStats.map((phase, i) => {
-            const phasePct = phase.total > 0 ? (phase.done / phase.total) * 100 : 0;
-            return (
-              <div key={i} className="flex-1" title={`${phase.name}: ${Math.round(phasePct)}%`}>
-                <div
-                  className="h-1.5 overflow-hidden rounded-full bg-[#ebebeb]"
-                >
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${PHASE_BAR_COLORS[i]}`}
-                    style={{ width: `${phasePct}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-          </div>
-        </div>
-
-        <div className="flex min-h-5 items-center justify-between border-t pt-4" style={{ borderColor: "var(--divider)" }}>
-          <div className="flex flex-wrap items-center gap-3 text-xs text-[#6b6b6b]">
-            <span className="flex items-center gap-1">
-              <CheckCircle2 className="h-3.5 w-3.5 text-[#3d7a55]" strokeWidth={1.5} />
-              {doneTasks}/{totalTasks}
-            </span>
-            {blockedTasks > 0 && (
-              <span className="flex items-center gap-1 font-medium text-[#a03535]">
-                <AlertCircle className="w-3.5 h-3.5" />
-                {blockedTasks} blocked
-              </span>
-            )}
-            {overdueTasks > 0 && (
-              <span className="flex items-center gap-1 font-medium text-[#96702a]">
-                <Clock className="w-3.5 h-3.5" />
-                {overdueTasks} overdue
+            {project.lotCount && (
+              <span className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                <Layers className="w-3.5 h-3.5 text-slate-400" />
+                <span className="font-bold text-slate-700">{project.lotCount}</span> lots
               </span>
             )}
           </div>
-          <span className="text-[11px] text-[#a0a0a0]">Open project</span>
+        </div>
+
+        <div>
+          {/* Progress Section */}
+          <div className="mb-5">
+            <div className="mb-2 flex items-center justify-between text-xs font-semibold">
+              <span className="text-slate-500">Overall Progress</span>
+              <span className="text-slate-900 tabular-nums">{pct}%</span>
+            </div>
+            <div className="flex gap-1" aria-label="Phase progress">
+              {phaseStats.map((phase, i) => {
+                const phasePct = phase.total > 0 ? (phase.done / phase.total) * 100 : 0;
+                return (
+                  <div key={i} className="flex-1" title={`${phase.name}: ${Math.round(phasePct)}%`}>
+                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${PHASE_BAR_COLORS[i]}`}
+                        style={{ width: `${phasePct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Footer stats section */}
+          <div className="flex min-h-[24px] items-center justify-between border-t border-slate-100 pt-4 mt-2">
+            <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 font-semibold">
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" strokeWidth={2} />
+                {doneTasks}/{totalTasks}
+              </span>
+              {blockedTasks > 0 && (
+                <span className="flex items-center gap-1 font-bold text-red-600 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded-md">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {blockedTasks} blocked
+                </span>
+              )}
+              {overdueTasks > 0 && (
+                <span className="flex items-center gap-1 font-bold text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded-md">
+                  <Clock className="w-3.5 h-3.5" />
+                  {overdueTasks} overdue
+                </span>
+              )}
+            </div>
+            <span className="text-[11px] font-bold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              Open details
+            </span>
+          </div>
         </div>
       </div>
     </Link>

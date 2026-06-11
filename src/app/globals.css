@@ -1,58 +1,59 @@
 @import "tailwindcss";
 
 :root {
-  --bg-app: #f5f5f3;
+  --bg-app: #f8fafc; /* Slate 50 */
   --bg-card: #ffffff;
-  --bg-subtle: #f5f5f3;
-  --bg-hover: #f0f0ee;
-  --bg-active-light: #edecea;
-  --bg-highlight: #f5f0eb;
-  --bg-dark: #111111;
+  --bg-subtle: #f1f5f9; /* Slate 100 */
+  --bg-hover: #e2e8f0; /* Slate 200 */
+  --bg-active-light: #cbd5e1; /* Slate 300 */
+  --bg-highlight: #f8fafc;
+  --bg-dark: #0f172a; /* Slate 900 */
 
-  --text-primary: #111111;
-  --text-secondary: #6b6b6b;
-  --text-tertiary: #a0a0a0;
-  --text-disabled: #c8c8c8;
+  --text-primary: #0f172a; /* Slate 900 */
+  --text-secondary: #475569; /* Slate 600 */
+  --text-tertiary: #64748b; /* Slate 500 */
+  --text-disabled: #94a3b8; /* Slate 400 */
   --text-inverse: #ffffff;
-  --text-link: #4a6fa5;
+  --text-link: #3b82f6; /* Blue 500 */
 
-  --accent-blue: #4a6fa5;
-  --accent-blue-light: #ebf0f7;
-  --accent-blue-dark: #2d4f7c;
-  --accent-clay: #b8735a;
-  --accent-clay-light: #f5ede7;
-  --accent-clay-dark: #8a4e38;
-  --accent-violet: #7a6faf;
-  --accent-violet-light: #eeeaf7;
-  --accent-violet-dark: #534a82;
+  --accent-blue: #3b82f6;
+  --accent-blue-light: #eff6ff;
+  --accent-blue-dark: #1d4ed8;
+  --accent-clay: #f97316; /* Orange 500 */
+  --accent-clay-light: #fff7ed;
+  --accent-clay-dark: #c2410c;
+  --accent-violet: #8b5cf6; /* Violet 500 */
+  --accent-violet-light: #f5f3ff;
+  --accent-violet-dark: #6d28d9;
 
-  --status-success: #3d7a55;
-  --status-success-bg: #ebf5ee;
-  --status-warning: #96702a;
-  --status-warning-bg: #f7f0e5;
-  --status-error: #a03535;
-  --status-error-bg: #f7ebeb;
-  --status-info: #4a6fa5;
-  --status-info-bg: #ebf0f7;
+  --status-success: #10b981; /* Emerald 500 */
+  --status-success-bg: #ecfdf5;
+  --status-warning: #f59e0b; /* Amber 500 */
+  --status-warning-bg: #fffbeb;
+  --status-error: #ef4444; /* Red 500 */
+  --status-error-bg: #fef2f2;
+  --status-info: #3b82f6;
+  --status-info-bg: #eff6ff;
 
-  --border-faint: #ebebeb;
-  --border-default: #e0e0de;
-  --border-strong: #bebebe;
-  --border-focus: #111111;
-  --border-active: #4a6fa5;
-  --divider: #f0f0ee;
+  --border-faint: #f8fafc;
+  --border-default: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --border-focus: #3b82f6;
+  --border-active: #3b82f6;
+  --divider: #f1f5f9;
 
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
   --radius-full: 9999px;
 
-  --shadow-card: 0 1px 4px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.03);
-  --shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.05);
-  --shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
-  --shadow-focus: 0 0 0 3px rgba(17, 17, 17, 0.08);
+  --shadow-card: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(15, 23, 42, 0.04);
+  --shadow-hover: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.05);
+  --shadow-raised: 0 12px 20px -8px rgba(15, 23, 42, 0.12), 0 4px 8px -4px rgba(15, 23, 42, 0.08);
+  --shadow-modal: 0 25px 50px -12px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(15, 23, 42, 0.05);
+  --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.15);
 
   --topbar-height: 64px;
   --content-max-width: 1240px;
@@ -66,7 +67,7 @@
   --accent: var(--accent-blue);
   --accent-hover: var(--accent-blue-dark);
   --accent-light: var(--accent-blue-light);
-  --accent-mid: #b8c7da;
+  --accent-mid: #93c5fd;
   --border: var(--border-default);
   --border-hover: var(--border-strong);
 }
@@ -74,8 +75,8 @@
 @theme inline {
   --color-background: var(--bg-app);
   --color-foreground: var(--text-primary);
-  --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: var(--font-display), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 *,

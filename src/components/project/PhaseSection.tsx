@@ -6,6 +6,7 @@ import { PHASE_BAR_COLORS, PHASE_COLORS } from "@/lib/utils";
 import { TaskRow } from "./TaskRow";
 import { TaskForm } from "./TaskForm";
 import { createTask } from "@/actions/tasks";
+import { Button } from "@/components/ui/Button";
 
 type Phase = {
   id: string;
@@ -82,58 +83,63 @@ export function PhaseSection({
   }
 
   return (
-    <section className="surface-card min-w-0 overflow-hidden">
-      <div className="flex flex-col justify-between gap-4 border-b border-[#f0f0ee] px-5 py-5 sm:flex-row sm:items-center">
+    <section className="surface-card border border-slate-100 min-w-0 overflow-hidden rounded-2xl">
+      {/* Header bar */}
+      <div className="flex flex-col justify-between gap-4 border-b border-slate-100 px-6 py-5 sm:flex-row sm:items-center bg-slate-50/30">
         <div>
           <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${colorClasses}`}>
+            <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${colorClasses}`}>
               Phase {phaseIndex + 1}
             </span>
             {blocked > 0 && (
-              <span className="flex items-center gap-1 text-[11px] font-medium text-[#a03535]">
-                <AlertCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
+              <span className="flex items-center gap-1 text-[11px] font-bold text-red-600 bg-red-50 border border-red-100 px-2 py-0.5 rounded-md">
+                <AlertCircle className="h-3.5 w-3.5" strokeWidth={2} />
                 {blocked} blocked
               </span>
             )}
           </div>
-          <h2 className="text-[18px] font-bold tracking-[-0.2px]">{phase.name}</h2>
-          <p className="mt-1 text-xs text-[#6b6b6b]">{done} of {total} tasks complete</p>
+          <h2 className="text-xl font-bold tracking-tight text-slate-800 font-display">{phase.name}</h2>
+          <p className="mt-1 text-xs font-semibold text-slate-400">{done} of {total} tasks complete</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="w-28">
-            <div className="mb-1.5 flex justify-between text-[11px] text-[#6b6b6b]">
+        
+        <div className="flex items-center gap-5 shrink-0">
+          <div className="w-32 hidden xs:block">
+            <div className="mb-1.5 flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
               <span>Progress</span>
-              <span>{progress}%</span>
+              <span className="text-slate-700">{progress}%</span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-[#ebebeb]">
+            <div className="h-2 overflow-hidden rounded-full bg-slate-100">
               <div className={`h-full rounded-full ${barColor}`} style={{ width: `${progress}%` }} />
             </div>
           </div>
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => setShowAddTask(true)}
-            className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#111111] px-4 text-xs font-medium text-white transition-opacity hover:opacity-80"
+            className="gap-1.5 shadow-sm"
           >
-            <Plus className="h-4 w-4" strokeWidth={1.5} />
-            Add task
-          </button>
+            <Plus className="h-4 w-4 stroke-[2.5]" />
+            Add Task
+          </Button>
         </div>
       </div>
 
       {blocked > 0 && (
-        <div className="mx-5 mt-4 flex items-start gap-2 rounded-[10px] bg-[#f7ebeb] px-3 py-2.5 text-xs text-[#a03535]">
-          <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
+        <div className="mx-6 mt-4 flex items-start gap-2 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-xs font-medium text-red-700">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" strokeWidth={2} />
           <span>
+            <strong className="font-bold">Blocked: </strong>
             {phase.tasks
               .filter((task) => task.status === "BLOCKED")
               .map((task) => task.name)
               .join(", ")}{" "}
-            {blocked === 1 ? "is" : "are"} blocked.
+            {blocked === 1 ? "is" : "are"} currently blocked.
           </span>
         </div>
       )}
 
       {showAddTask && (
-        <div className="border-b border-[#f0f0ee] p-5">
+        <div className="border-b border-slate-150 p-6 bg-slate-50/20">
           <TaskForm
             contacts={contacts}
             onSubmit={handleAddTask}
@@ -144,19 +150,19 @@ export function PhaseSection({
       )}
 
       {phase.tasks.length === 0 ? (
-        <div className="px-6 py-14 text-center">
-          <p className="text-sm font-medium">No tasks in this phase</p>
-          <p className="mt-1 text-xs text-[#6b6b6b]">Add the first task when this phase is ready.</p>
+        <div className="px-6 py-16 text-center">
+          <p className="text-sm font-bold text-slate-700">No tasks in this phase</p>
+          <p className="mt-1 text-xs text-slate-400">Add the first task to begin tracking the work.</p>
         </div>
       ) : (
         <>
-          <div className="hidden grid-cols-[minmax(0,1fr)_110px_120px_100px] gap-3 border-b border-[#f0f0ee] bg-[#fafaf9] px-5 py-2.5 text-[11px] font-medium text-[#6b6b6b] md:grid">
+          <div className="hidden grid-cols-[minmax(0,1fr)_120px_120px_100px] gap-3 border-b border-slate-100 bg-slate-50/50 px-6 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 md:grid">
             <span>Task</span>
             <span>Owner</span>
-            <span>Due</span>
+            <span>Due Date</span>
             <span>Status</span>
           </div>
-          <div className="divide-y divide-[#f0f0ee]">
+          <div className="divide-y divide-slate-100">
             {phase.tasks.map((task) => (
               <TaskRow
                 key={task.id}

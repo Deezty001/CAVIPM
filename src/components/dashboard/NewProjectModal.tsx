@@ -64,7 +64,7 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
 
   return (
     <Modal open={open} onClose={onClose} title="New Project" size="md">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <Input
           label="Project name"
           placeholder="e.g. 220 Moss Vale Rd"
@@ -73,7 +73,7 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
           error={errors.name}
           required
         />
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             label="Address"
             placeholder="Street address"
@@ -87,7 +87,7 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
             onChange={(e) => setForm({ ...form, suburb: e.target.value })}
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Select
             label="Development type"
             options={TYPE_OPTIONS}
@@ -106,36 +106,30 @@ export function NewProjectModal({ open, onClose }: NewProjectModalProps) {
 
         {/* Template toggle */}
         <label
-          className="flex cursor-pointer items-start gap-3 rounded-[10px] border p-3 transition-colors hover:bg-[#f0f0ee]"
-          style={{
-            borderColor: useTemplate ? "var(--border-active)" : "var(--border-default)",
-            background: useTemplate ? "var(--accent-blue-light)" : undefined,
-          }}
+          className={`flex cursor-pointer items-start gap-3.5 rounded-xl border p-4 transition-all duration-200 ${
+            useTemplate 
+              ? "border-blue-200 bg-blue-50/50 shadow-sm shadow-blue-50" 
+              : "border-slate-200 bg-slate-50/20 hover:border-slate-300 hover:bg-slate-50/50"
+          }`}
         >
           <input
             type="checkbox"
             checked={useTemplate}
             onChange={(e) => setUseTemplate(e.target.checked)}
-            className="mt-0.5 accent-[#111111]"
+            className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 accent-blue-600 cursor-pointer"
           />
-          <div>
-            <div
-              className="flex items-center gap-1.5 text-sm font-medium"
-              style={{ color: "var(--text-primary)" }}
-            >
-              <Sparkles className="w-3.5 h-3.5" style={{ color: "var(--accent-blue)" }} />
+          <div className="cursor-pointer select-none">
+            <div className="flex items-center gap-1.5 text-sm font-bold text-slate-800">
+              <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
               Pre-fill with standard NSW subdivision tasks
             </div>
-            <p
-              className="text-xs mt-0.5"
-              style={{ color: "var(--text-muted)" }}
-            >
+            <p className="text-xs mt-1 text-slate-500 leading-relaxed">
               Adds ~40 tasks across all 6 phases based on a typical residential subdivision. You can edit or delete any of them.
             </p>
           </div>
         </label>
 
-        <div className="flex justify-end gap-2 pt-2">
+        <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
           <Button variant="ghost" type="button" onClick={onClose}>
             Cancel
           </Button>

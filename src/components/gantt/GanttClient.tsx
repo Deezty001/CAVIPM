@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, BarChart3 } from "lucide-react";
 import { PHASE_NAMES, PHASE_GANTT_COLORS } from "@/lib/utils";
 import { isBusinessDay } from "@/lib/holidays";
 import { formatAUDate, formatDuration } from "@/lib/dates";
 
 type Project = NonNullable<Awaited<ReturnType<typeof import("@/actions/projects").getProject>>>;
-
 type ZoomLevel = "week" | "month" | "quarter";
 
 function getDaysInRange(start: Date, end: Date): Date[] {
@@ -109,8 +108,8 @@ export function GanttClient({ project }: { project: Project }) {
   const allRangeDays = getDaysInRange(rangeStart, rangeEnd);
 
   const colWidth = zoom === "week" ? 40 : zoom === "month" ? 24 : 14;
-  const rowHeight = 32;
-  const labelWidth = 220;
+  const rowHeight = 36;
+  const labelWidth = 240;
 
   function dayToX(date: Date): number {
     const diff = Math.floor((date.getTime() - rangeStart.getTime()) / 86400000);
@@ -127,10 +126,9 @@ export function GanttClient({ project }: { project: Project }) {
   }
 
   const totalWidth = labelWidth + allRangeDays.length * colWidth;
-  // Today line X
   const todayX = dayToX(today);
 
-  // Group bars by phase for section headers
+  // Group bars by phase
   const phaseGroups: { phaseIndex: number; phaseName: string; bars: GanttBarInfo[] }[] = [];
   for (const phaseName of PHASE_NAMES) {
     const phaseIndex = PHASE_NAMES.indexOf(phaseName);
@@ -153,34 +151,38 @@ export function GanttClient({ project }: { project: Project }) {
   const svgHeight = rows.length * rowHeight + 40;
 
   return (
-    <div className="app-page">
-      {/* Header */}
+    <div className="app-page max-w-[1240px] px-4 py-8 md:px-8">
+      {/* Breadcrumb */}
       <Link
         href={`/projects/${project.id}`}
-        className="mb-5 inline-flex items-center gap-1.5 text-xs text-[#6b6b6b] transition-colors hover:text-[#111111]"
+        className="mb-4 inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-wider"
       >
-        <ChevronLeft className="w-4 h-4" />
+        <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
         {project.name}
       </Link>
 
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <h1
-          className="page-title"
-        >
-          Gantt Chart
-        </h1>
-        <div
-          className="flex rounded-full bg-[#eaeae8] p-1 text-[13px]"
-        >
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 pb-6 border-b border-slate-100">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 font-display sm:text-4xl">
+            Gantt Timeline
+          </h1>
+          <p className="text-xs font-medium text-slate-500 mt-1 flex items-center gap-1">
+            <BarChart3 className="w-3.5 h-3.5" />
+            Schedule visualization
+          </p>
+        </div>
+
+        {/* Apple Segmented control zoom filters */}
+        <div className="bg-slate-100 p-1 rounded-xl inline-flex gap-1.5 border border-slate-200/40">
           {(["week", "month", "quarter"] as ZoomLevel[]).map((z) => (
             <button
               key={z}
               onClick={() => setZoom(z)}
-              className="rounded-full px-4 py-2 capitalize transition-colors"
-              style={{
-                background: zoom === z ? "var(--bg-dark)" : "transparent",
-                color: zoom === z ? "white" : "var(--text-secondary)",
-              }}
+              className={`rounded-lg px-4 py-1.5 capitalize transition-all text-[13px] font-bold cursor-pointer ${
+                zoom === z 
+                  ? "bg-slate-900 text-white shadow-sm" 
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
             >
               {z}
             </button>
@@ -189,19 +191,19 @@ export function GanttClient({ project }: { project: Project }) {
       </div>
 
       {bars.length === 0 ? (
-        <div
-          className="text-center py-16 rounded-xl border"
-          style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
-        >
-          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            No tasks with start and due dates yet. Add dates to tasks to see them here.
+        <div className="surface-card py-20 text-center border border-slate-100 rounded-2xl">
+          <p className="text-sm font-semibold text-slate-500">
+            No schedule coordinates found.
+          </p>
+          <p className="text-xs text-slate-400 mt-1">
+            Add start and due dates to your tasks or subtasks to generate the Gantt chart.
           </p>
         </div>
       ) : (
         <div
-          className="surface-card overflow-auto"
+          className="surface-card overflow-auto border border-slate-100 rounded-2xl bg-white shadow-sm scrollbar-thin"
           style={{
-            maxHeight: "calc(100vh - 200px)",
+            maxHeight: "calc(100vh - 220px)",
           }}
         >
           <svg
@@ -232,11 +234,11 @@ export function GanttClient({ project }: { project: Project }) {
                   height={svgHeight + 40}
                   fill={
                     isToday
-                      ? "rgba(74,111,165,0.06)"
+                      ? "rgba(59,130,246,0.08)"
                       : isWeekend
-                      ? "rgba(0,0,0,0.025)"
+                      ? "rgba(15,23,42,0.015)"
                       : isHoliday
-                      ? "rgba(245,158,11,0.06)"
+                      ? "rgba(245,158,11,0.05)"
                       : "transparent"
                   }
                 />
@@ -255,17 +257,18 @@ export function GanttClient({ project }: { project: Project }) {
                       y={y}
                       width={totalWidth}
                       height={rowHeight}
-                      fill={`${color}18`}
+                      fill={`${color}10`}
                     />
                     <text
-                      x={8}
-                      y={y + rowHeight / 2 + 5}
+                      x={12}
+                      y={y + rowHeight / 2 + 4}
                       fontSize={11}
-                      fontWeight={600}
+                      fontWeight={750}
                       fill={color}
-                      fontFamily="Syne, sans-serif"
+                      fontFamily="var(--font-display), sans-serif"
+                      letterSpacing="0.2px"
                     >
-                      {row.phaseName}
+                      {row.phaseName.toUpperCase()}
                     </text>
                   </g>
                 );
@@ -278,7 +281,7 @@ export function GanttClient({ project }: { project: Project }) {
 
               return (
                 <g key={`bar-${bar.id}`}>
-                  {/* Row hover bg */}
+                  {/* Row hover bg placeholder */}
                   <rect
                     x={0}
                     y={y}
@@ -288,23 +291,24 @@ export function GanttClient({ project }: { project: Project }) {
                   />
                   {/* Label */}
                   <text
-                    x={bar.isSubtask ? 16 : 8}
+                    x={bar.isSubtask ? 28 : 16}
                     y={y + rowHeight / 2 + 4}
-                    fontSize={11}
-                    fill={isDone ? "#9ca3af" : "var(--text-secondary)"}
-                    fontFamily="DM Sans, sans-serif"
+                    fontSize={12}
+                    fontWeight={bar.isSubtask ? 500 : 600}
+                    fill={isDone ? "#94a3b8" : "var(--text-primary)"}
+                    fontFamily="var(--font-sans), sans-serif"
                     textDecoration={isDone ? "line-through" : undefined}
                   >
-                    {bar.name.length > 28 ? bar.name.slice(0, 27) + "…" : bar.name}
+                    {bar.name.length > 26 ? bar.name.slice(0, 25) + "…" : bar.name}
                   </text>
                   {/* Bar */}
                   <rect
                     x={x}
                     y={y + (bar.isSubtask ? 10 : 8)}
-                    width={Math.max(w, 4)}
+                    width={Math.max(w, 5)}
                     height={bar.isSubtask ? rowHeight - 20 : rowHeight - 16}
-                    rx={3}
-                    fill={isDone ? "#d1d5db" : color}
+                    rx={5}
+                    fill={isDone ? "#cbd5e1" : color}
                     fillOpacity={isDone ? 1 : 0.85}
                     stroke={isBlocked ? "#ef4444" : "transparent"}
                     strokeWidth={isBlocked ? 2 : 0}
@@ -319,13 +323,14 @@ export function GanttClient({ project }: { project: Project }) {
                     onMouseLeave={() => setTooltip(null)}
                   />
                   {/* Bar label */}
-                  {w > 60 && (
+                  {w > 65 && (
                     <text
-                      x={x + 6}
+                      x={x + 8}
                       y={y + rowHeight / 2 + 4}
                       fontSize={10}
+                      fontWeight={700}
                       fill="white"
-                      fontFamily="DM Sans, sans-serif"
+                      fontFamily="var(--font-sans), sans-serif"
                       style={{ pointerEvents: "none" }}
                     >
                       {bar.name.length > Math.floor(w / 7)
@@ -345,55 +350,62 @@ export function GanttClient({ project }: { project: Project }) {
               y2={svgHeight + 40}
               stroke="var(--accent)"
               strokeWidth={1.5}
-              strokeDasharray="4,3"
+              strokeDasharray="4,4"
             />
             <text
-              x={todayX + 3}
+              x={todayX + 4}
               y={14}
               fontSize={10}
+              fontWeight={700}
               fill="var(--accent)"
-              fontWeight={600}
             >
               Today
             </text>
           </svg>
 
-          {/* Tooltip */}
+          {/* Glassmorphic Tooltip */}
           {tooltip && (
             <div
-              className="pointer-events-none fixed z-[300] min-w-[180px] rounded-[10px] border border-[#ebebeb] bg-white p-3 text-xs shadow-[var(--shadow-raised)]"
+              className="pointer-events-none fixed z-[300] min-w-[200px] rounded-xl border border-slate-100 bg-white/95 backdrop-blur-md p-4 text-xs shadow-xl"
               style={{
                 left: tooltip.x,
                 top: tooltip.y,
                 color: "var(--text-primary)",
               }}
             >
-              <p className="font-semibold mb-1">{tooltip.bar.name}</p>
-              <p style={{ color: "var(--text-muted)" }}>{tooltip.bar.phaseName}</p>
-              {tooltip.bar.assigneeText && (
-                <p style={{ color: "var(--text-muted)" }}>
-                  Assignee: {tooltip.bar.assigneeText}
+              <p className="font-bold text-slate-800 mb-1">{tooltip.bar.name}</p>
+              <p className="font-semibold text-slate-400 text-[10px] mb-2 uppercase tracking-wide">{tooltip.bar.phaseName}</p>
+              
+              <div className="space-y-1 text-slate-500 font-medium">
+                {tooltip.bar.assigneeText && (
+                  <p>
+                    <span className="font-bold text-slate-400">Owner:</span> {tooltip.bar.assigneeText}
+                  </p>
+                )}
+                <p>
+                  <span className="font-bold text-slate-400">Dates:</span> {formatAUDate(tooltip.bar.start)} → {formatAUDate(tooltip.bar.end)}
                 </p>
-              )}
-              <p style={{ color: "var(--text-muted)" }}>
-                {formatAUDate(tooltip.bar.start)} → {formatAUDate(tooltip.bar.end)}
-              </p>
-              {tooltip.bar.duration && (
-                <p style={{ color: "var(--text-muted)" }}>
-                  {formatDuration(tooltip.bar.duration)} ({tooltip.bar.duration} bd)
-                </p>
-              )}
-              <p
-                className={`font-medium mt-1 ${
-                  tooltip.bar.status === "BLOCKED"
-                    ? "text-red-500"
-                    : tooltip.bar.status === "DONE"
-                    ? "text-emerald-600"
-                    : ""
-                }`}
-              >
-                {tooltip.bar.status.replace("_", " ")}
-              </p>
+                {tooltip.bar.duration && (
+                  <p>
+                    <span className="font-bold text-slate-400">Duration:</span> {formatDuration(tooltip.bar.duration)} ({tooltip.bar.duration} bd)
+                  </p>
+                )}
+              </div>
+
+              <div className="border-t border-slate-100 pt-2 mt-2 flex items-center justify-between">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Status</span>
+                <span
+                  className={`font-bold px-2 py-0.5 rounded text-[10px] uppercase tracking-wider ${
+                    tooltip.bar.status === "BLOCKED"
+                      ? "bg-red-50 text-red-600"
+                      : tooltip.bar.status === "DONE"
+                      ? "bg-emerald-50 text-emerald-600"
+                      : "bg-slate-50 text-slate-600"
+                  }`}
+                >
+                  {tooltip.bar.status.replace("_", " ")}
+                </span>
+              </div>
             </div>
           )}
         </div>
@@ -447,14 +459,15 @@ function MonthHeader({
         <g key={i}>
           <rect x={m.x} y={0} width={m.width} height={40} fill={i % 2 === 0 ? "var(--bg-muted)" : "var(--bg-surface)"} />
           <text
-            x={m.x + 6}
+            x={m.x + 8}
             y={24}
             fontSize={11}
-            fontWeight={600}
+            fontWeight={750}
             fill="var(--text-secondary)"
-            fontFamily="Syne, sans-serif"
+            fontFamily="var(--font-display), sans-serif"
+            letterSpacing="0.2px"
           >
-            {m.label}
+            {m.label.toUpperCase()}
           </text>
           <line x1={m.x} y1={0} x2={m.x} y2={40} stroke="var(--border)" strokeWidth={1} />
         </g>

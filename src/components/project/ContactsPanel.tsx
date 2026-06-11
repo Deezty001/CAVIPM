@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Pencil, Trash2, Building2, Mail, Phone } from "lucide-react";
+import { Plus, Pencil, Trash2, Building2, Mail, Phone, ShieldCheck, UserCheck } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
@@ -118,30 +118,37 @@ export function ContactsPanel({ contacts, projectId }: ContactsPanelProps) {
   const external = contacts.filter((c) => !c.isInternal);
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="section-title">
-          Project Team & Contacts
-        </h2>
-        <Button variant="primary" size="sm" onClick={openNew}>
-          <Plus className="w-3.5 h-3.5" />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <h2 className="text-base font-bold text-slate-800 tracking-tight font-display">
+            Project Team & Consultants
+          </h2>
+          <p className="text-xs text-slate-500">Directory of everyone working on this subdivision</p>
+        </div>
+        <Button variant="primary" size="sm" onClick={openNew} className="gap-1.5 shadow-sm">
+          <Plus className="w-4 h-4 stroke-[2.5]" />
           Add Contact
         </Button>
       </div>
 
       {contacts.length === 0 ? (
-        <div
-          className="surface-card py-12 text-center"
-        >
-          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            No contacts yet — add your project team and consultants
+        <div className="surface-card py-16 text-center border border-slate-100 rounded-2xl">
+          <p className="text-sm font-semibold text-slate-500">
+            No contacts added to this project yet.
           </p>
+          <p className="text-xs text-slate-400 mt-1 mb-4">Add members of your internal team or external consultants.</p>
+          <Button variant="primary" size="sm" onClick={openNew}>
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+            Add Contact
+          </Button>
         </div>
       ) : (
-        <div className="flex flex-col gap-6">
+        <div className="space-y-8">
           {internal.length > 0 && (
             <ContactGroup
               title="Cavi Property Team"
+              icon={<ShieldCheck className="w-4 h-4 text-blue-600" />}
               contacts={internal}
               onEdit={openEdit}
               onDelete={handleDelete}
@@ -149,7 +156,8 @@ export function ContactsPanel({ contacts, projectId }: ContactsPanelProps) {
           )}
           {external.length > 0 && (
             <ContactGroup
-              title="Consultants & External"
+              title="External Consultants & Contractors"
+              icon={<UserCheck className="w-4 h-4 text-indigo-600" />}
               contacts={external}
               onEdit={openEdit}
               onDelete={handleDelete}
@@ -164,8 +172,8 @@ export function ContactsPanel({ contacts, projectId }: ContactsPanelProps) {
         title={editingContact ? "Edit Contact" : "Add Contact"}
         size="md"
       >
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Full name"
               value={form.name}
@@ -181,7 +189,7 @@ export function ContactsPanel({ contacts, projectId }: ContactsPanelProps) {
               placeholder="e.g. JD"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Title / role"
               value={form.title}
@@ -195,7 +203,7 @@ export function ContactsPanel({ contacts, projectId }: ContactsPanelProps) {
               placeholder="e.g. Smith Planning"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Email"
               type="email"
@@ -218,7 +226,7 @@ export function ContactsPanel({ contacts, projectId }: ContactsPanelProps) {
               { value: "true", label: "Internal (Cavi Property)" },
             ]}
           />
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
             <Button variant="ghost" type="button" onClick={() => setModalOpen(false)}>
               Cancel
             </Button>
@@ -234,79 +242,79 @@ export function ContactsPanel({ contacts, projectId }: ContactsPanelProps) {
 
 function ContactGroup({
   title,
+  icon,
   contacts,
   onEdit,
   onDelete,
 }: {
   title: string;
+  icon: React.ReactNode;
   contacts: Contact[];
   onEdit: (c: Contact) => void;
   onDelete: (id: string, name: string) => void;
 }) {
   return (
-    <div>
-      <h3
-        className="mb-3 text-xs font-medium text-[#6b6b6b]"
-      >
-        {title}
-      </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 px-1">
+        {icon}
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          {title}
+        </h3>
+        <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+          {contacts.length}
+        </span>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {contacts.map((c) => (
           <div
             key={c.id}
-            className="surface-card group flex items-start gap-3 p-4 transition-transform hover:-translate-y-px"
+            className="surface-card group flex items-start gap-4 p-4 border border-slate-100 hover:border-slate-200/80 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 rounded-2xl bg-white"
           >
             <Avatar initials={c.initials} size="md" title={c.name} />
             <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-1">
-                <span
-                  className="text-sm font-medium truncate"
-                  style={{ color: "var(--text-primary)" }}
-                >
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-[14px] font-bold text-slate-800 truncate leading-snug">
                   {c.name}
                 </span>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                  <button onClick={() => onEdit(c)} aria-label="Edit">
-                    <Pencil className="w-3.5 h-3.5" style={{ color: "var(--text-muted)" }} />
+                <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <button onClick={() => onEdit(c)} className="text-slate-400 hover:text-slate-600 cursor-pointer" aria-label="Edit">
+                    <Pencil className="w-3.5 h-3.5" strokeWidth={2} />
                   </button>
-                  <button onClick={() => onDelete(c.id, c.name)} aria-label="Remove">
-                    <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                  <button onClick={() => onDelete(c.id, c.name)} className="text-red-400 hover:text-red-600 cursor-pointer" aria-label="Remove">
+                    <Trash2 className="w-3.5 h-3.5" strokeWidth={2} />
                   </button>
                 </div>
               </div>
+              
               {c.title && (
-                <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>
+                <p className="text-[12px] font-semibold text-slate-500 truncate mt-0.5 leading-snug">
                   {c.title}
                 </p>
               )}
               {c.organisation && (
-                <p
-                  className="text-xs flex items-center gap-1 truncate"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  <Building2 className="w-2.5 h-2.5 shrink-0" />
+                <p className="text-[11px] font-bold text-slate-400 flex items-center gap-1 truncate mt-0.5 leading-snug">
+                  <Building2 className="w-3 h-3 shrink-0" />
                   {c.organisation}
                 </p>
               )}
-              <div className="flex gap-2 mt-1">
+              
+              <div className="flex gap-2 mt-3.5">
                 {c.email && (
                   <a
                     href={`mailto:${c.email}`}
-                    className="text-xs hover:opacity-70 transition-opacity"
-                    style={{ color: "var(--accent)" }}
+                    className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50/30 transition-all"
                     title={c.email}
                   >
-                    <Mail className="w-3 h-3" />
+                    <Mail className="w-3.5 h-3.5" />
                   </a>
                 )}
                 {c.phone && (
                   <a
                     href={`tel:${c.phone}`}
-                    className="text-xs hover:opacity-70 transition-opacity"
-                    style={{ color: "var(--accent)" }}
+                    className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50/30 transition-all"
                     title={c.phone}
                   >
-                    <Phone className="w-3 h-3" />
+                    <Phone className="w-3.5 h-3.5" />
                   </a>
                 )}
               </div>

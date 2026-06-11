@@ -97,6 +97,7 @@ export function TaskForm({
     }
   }
 
+  // Derive start date or duration
   function handleDueChange(val: string) {
     setDueDate(val);
     if (val) checkDueDateWarning(fromDateInput(val)!);
@@ -111,6 +112,7 @@ export function TaskForm({
     }
   }
 
+  // Derive due date
   function handleDurationChange(val: string) {
     setDuration(val);
     const n = parseInt(val);
@@ -171,23 +173,13 @@ export function TaskForm({
             placeholder="Subtask name"
             required
             autoFocus
-            className="flex-1 text-sm px-2.5 py-1.5 rounded-md border"
-            style={{
-              borderColor: "var(--border)",
-              background: "var(--bg-surface)",
-              color: "var(--text-primary)",
-            }}
+            className="flex-1 text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] outline-none transition-all duration-200"
           />
           <input
             type="date"
             value={dueDate}
             onChange={(e) => handleDueChange(e.target.value)}
-            className="text-sm px-2 py-1.5 rounded-md border"
-            style={{
-              borderColor: "var(--border)",
-              background: "var(--bg-surface)",
-              color: "var(--text-primary)",
-            }}
+            className="text-xs px-2.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] outline-none transition-all duration-200"
           />
           <Button type="submit" variant="primary" size="sm" disabled={loading}>
             Add
@@ -203,12 +195,9 @@ export function TaskForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-3 rounded-[16px] bg-[#f5f5f3] p-4"
-      style={{
-        borderColor: "var(--border-default)",
-      }}
+      className="flex flex-col gap-4 rounded-2xl bg-slate-50 border border-slate-100 p-5"
     >
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 gap-4">
         <Input
           label="Task name"
           value={name}
@@ -217,31 +206,21 @@ export function TaskForm({
           required
           autoFocus
         />
-        {!compact && (
-          <div className="flex flex-col gap-1.5">
-            <label
-              className="text-sm font-medium"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              Description
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Optional description…"
-              rows={2}
-              className="px-3 py-2 text-sm rounded-lg border resize-none"
-              style={{
-                borderColor: "var(--border)",
-                background: "var(--bg-surface)",
-                color: "var(--text-primary)",
-              }}
-            />
-          </div>
-        )}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            Description
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Optional description..."
+            rows={3}
+            className="px-3.5 py-2.5 text-[13px] rounded-xl border border-slate-200 bg-white text-slate-900 focus:border-blue-500 focus:bg-white focus:shadow-[0_0_0_3px_rgba(59,130,246,0.15)] outline-none resize-none transition-all duration-200 leading-relaxed"
+          />
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Select
           label="Assignee"
           options={contactOptions}
@@ -270,14 +249,14 @@ export function TaskForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input
           label="Start date"
           type="date"
           value={startDate}
           onChange={(e) => handleStartChange(e.target.value)}
         />
-        <div>
+        <div className="flex flex-col">
           <Input
             label="Due date"
             type="date"
@@ -285,17 +264,17 @@ export function TaskForm({
             onChange={(e) => handleDueChange(e.target.value)}
           />
           {dueDateWarning && (
-            <p className="text-xs text-orange-500 mt-1">{dueDateWarning}</p>
+            <p className="text-[11px] font-semibold text-amber-600 mt-1">{dueDateWarning}</p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={onCancel} size="sm">
+      <div className="flex justify-end gap-2 pt-2 border-t border-slate-200/50 mt-1">
+        <Button type="button" variant="ghost" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" variant="primary" size="sm" disabled={loading || !name.trim()}>
-          {loading ? "Saving…" : "Add Task"}
+        <Button type="submit" variant="primary" disabled={loading || !name.trim()}>
+          {loading ? "Saving…" : "Save Task"}
         </Button>
       </div>
     </form>

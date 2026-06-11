@@ -6,10 +6,9 @@ import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
-import { Plus, Trash2, UserPlus } from "lucide-react";
+import { Plus, Trash2, UserPlus, Sparkles } from "lucide-react";
 import { createMeeting } from "@/actions/meetings";
-import { MEETING_TYPE_LABELS } from "@/lib/utils";
-import { generateInitials } from "@/lib/utils";
+import { MEETING_TYPE_LABELS, generateInitials } from "@/lib/utils";
 
 type Contact = {
   id: string;
@@ -91,6 +90,7 @@ export function NewMeetingModal({
     ]);
   }
 
+  // Remove attendee
   function removeAttendee(i: number) {
     setAttendees((prev) => prev.filter((_, idx) => idx !== i));
   }
@@ -221,10 +221,11 @@ export function NewMeetingModal({
   const attendeeInitials = attendees.map((a) => a.initials).filter(Boolean);
 
   return (
-    <Modal open={open} onClose={onClose} title="New Meeting" size="xl">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <Modal open={open} onClose={onClose} title="New Meeting Minutes" size="xl">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        
         {/* Basic info */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Select
             label="Meeting type"
             options={MEETING_TYPE_OPTIONS}
@@ -235,10 +236,12 @@ export function NewMeetingModal({
             label="Location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="e.g. Site office, Teams"
+            placeholder="e.g. Site office, Microsoft Teams"
           />
         </div>
-        <div className="grid grid-cols-4 gap-3">
+        
+        {/* Date / Time Row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Input
             label="Date"
             type="date"
@@ -262,61 +265,66 @@ export function NewMeetingModal({
             label="Prepared by"
             value={preparedBy}
             onChange={(e) => setPreparedBy(e.target.value)}
-            placeholder="Name"
+            placeholder="e.g. Adam Karim"
           />
         </div>
 
-        {/* Attendees */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label
-              className="text-sm font-medium"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              Attendees
-            </label>
-            <div className="flex gap-1.5">
-              {contacts.slice(0, 8).map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => addAttendeeFromContact(c)}
-                  title={c.name}
-                  className="w-6 h-6 rounded-full text-xs font-semibold flex items-center justify-center transition-opacity hover:opacity-70"
-                  style={{
-                    background: "var(--accent-light)",
-                    color: "var(--accent)",
-                    opacity: attendees.find((a) => a.name === c.name) ? 0.4 : 1,
-                  }}
-                >
-                  {c.initials}
-                </button>
-              ))}
+        {/* Attendees Directory Section */}
+        <div className="border-t border-slate-100 pt-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                Attendees
+              </label>
+              <p className="text-xs text-slate-400">Add attendees from directory or manually</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-slate-400 font-semibold mr-1">Quick Add:</span>
+              <div className="flex flex-wrap gap-1.5 max-w-xs md:max-w-md">
+                {contacts.slice(0, 5).map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => addAttendeeFromContact(c)}
+                    title={c.name}
+                    className="w-7 h-7 rounded-xl text-xs font-bold flex items-center justify-center border transition-all hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 cursor-pointer"
+                    style={{
+                      background: attendees.find((a) => a.name === c.name) ? "var(--bg-hover)" : "white",
+                      color: attendees.find((a) => a.name === c.name) ? "var(--text-disabled)" : "var(--text-secondary)",
+                      borderColor: attendees.find((a) => a.name === c.name) ? "transparent" : "var(--border)",
+                      opacity: attendees.find((a) => a.name === c.name) ? 0.5 : 1,
+                    }}
+                  >
+                    {c.initials}
+                  </button>
+                ))}
+              </div>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={addBlankAttendee}
-                className="gap-1"
+                className="gap-1 ml-2 border border-slate-200 bg-white"
               >
                 <UserPlus className="w-3.5 h-3.5" />
-                Add
+                Add Blank
               </Button>
             </div>
           </div>
+
+          {/* Attendees list editor */}
           {attendees.length > 0 && (
-            <div
-              className="rounded-lg border divide-y"
-              style={{ borderColor: "var(--border)" }}
-            >
+            <div className="rounded-2xl border border-slate-100 p-2.5 bg-slate-50/50 space-y-3">
               {attendees.map((a, i) => (
-                <div key={i} className="grid grid-cols-[1fr_80px_1fr_1fr_auto] gap-2 px-3 py-2 items-center">
+                <div 
+                  key={i} 
+                  className="grid grid-cols-1 md:grid-cols-[2fr_80px_2.2fr_2.2fr_auto] gap-3 px-4 py-4 md:py-2 md:px-3 items-center bg-white md:bg-transparent border border-slate-100 md:border-0 rounded-xl relative shadow-sm md:shadow-none"
+                >
                   <input
                     value={a.name}
                     onChange={(e) => updateAttendee(i, "name", e.target.value)}
                     placeholder="Full name"
-                    className="text-sm px-2 py-1 rounded border"
-                    style={{ borderColor: "var(--border)", background: "var(--bg-surface)" }}
+                    className="text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] outline-none transition-all duration-200 w-full"
                   />
                   <input
                     value={a.initials}
@@ -325,29 +333,26 @@ export function NewMeetingModal({
                     }
                     placeholder="Init."
                     maxLength={3}
-                    className="text-sm px-2 py-1 rounded border text-center"
-                    style={{ borderColor: "var(--border)", background: "var(--bg-surface)" }}
+                    className="text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] outline-none transition-all duration-200 text-center w-full"
                   />
                   <input
                     value={a.title}
                     onChange={(e) => updateAttendee(i, "title", e.target.value)}
-                    placeholder="Title"
-                    className="text-sm px-2 py-1 rounded border"
-                    style={{ borderColor: "var(--border)", background: "var(--bg-surface)" }}
+                    placeholder="Title / role (e.g. Planner)"
+                    className="text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] outline-none transition-all duration-200 w-full"
                   />
                   <input
                     value={a.organisation}
                     onChange={(e) => updateAttendee(i, "organisation", e.target.value)}
-                    placeholder="Organisation"
-                    className="text-sm px-2 py-1 rounded border"
-                    style={{ borderColor: "var(--border)", background: "var(--bg-surface)" }}
+                    placeholder="Company name"
+                    className="text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] outline-none transition-all duration-200 w-full"
                   />
                   <button
                     type="button"
                     onClick={() => removeAttendee(i)}
-                    className="text-red-400 hover:text-red-600 transition-colors"
+                    className="text-red-400 hover:text-red-600 transition-colors p-1.5 md:p-1 hover:bg-red-50 rounded-lg absolute top-2 right-2 md:relative md:top-auto md:right-auto cursor-pointer"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               ))}
@@ -355,53 +360,46 @@ export function NewMeetingModal({
           )}
         </div>
 
-        {/* Agenda */}
-        <div>
-          <label
-            className="text-sm font-medium mb-2 block"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            Agenda
+        {/* Agenda Section */}
+        <div className="border-t border-slate-100 pt-5">
+          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">
+            Minutes & Agenda Items
           </label>
-          <div className="flex flex-col gap-3">
+          
+          <div className="flex flex-col gap-4">
             {agenda.map((section, si) => (
               <div
                 key={si}
-                className="rounded-lg border"
-                style={{ borderColor: "var(--border)", background: "var(--bg-muted)" }}
+                className="rounded-2xl border border-slate-250 bg-slate-50/20 overflow-hidden shadow-sm"
               >
-                {/* Section header */}
-                <div className="flex items-center gap-2 px-3 py-2 border-b" style={{ borderColor: "var(--border)" }}>
-                  <span
-                    className="text-xs font-bold w-8 shrink-0"
-                    style={{ color: "var(--accent)" }}
-                  >
+                {/* Section Header Row */}
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-slate-50/70">
+                  <span className="text-xs font-bold w-8 shrink-0 text-blue-600 font-display">
                     {section.number}
                   </span>
                   <input
                     value={section.title}
                     onChange={(e) => updateAgendaTitle(si, e.target.value)}
-                    placeholder="Section title"
-                    className="flex-1 text-sm font-medium bg-transparent border-0 outline-none"
-                    style={{ color: "var(--text-primary)" }}
+                    placeholder="Section / Subject Title (e.g. Design issues)"
+                    className="flex-1 text-sm font-bold bg-transparent border-0 outline-none text-slate-800 font-display focus:text-blue-600"
                   />
                   <button
                     type="button"
                     onClick={() => removeSection(si)}
-                    className="text-red-300 hover:text-red-500 transition-colors"
+                    className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg p-1 transition-colors cursor-pointer"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 
-                {/* Sub items */}
-                <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+                {/* Sub items list */}
+                <div className="divide-y divide-slate-100 p-2 sm:p-3 space-y-3 sm:space-y-0 bg-white">
                   {section.subItems.map((sub, subi) => (
-                    <div key={subi} className="grid grid-cols-[40px_1fr_1fr_80px_auto] gap-2 px-3 py-2 items-start">
-                      <span
-                        className="text-xs pt-1.5 shrink-0"
-                        style={{ color: "var(--text-muted)" }}
-                      >
+                    <div 
+                      key={subi} 
+                      className="grid grid-cols-1 md:grid-cols-[40px_2fr_1.5fr_100px_auto] gap-3 p-4 md:p-2 items-start bg-slate-50/50 md:bg-transparent border border-slate-100 md:border-0 rounded-xl relative"
+                    >
+                      <span className="text-xs font-bold text-slate-400 pt-2 tabular-nums">
                         {sub.number}
                       </span>
                       <textarea
@@ -409,35 +407,20 @@ export function NewMeetingModal({
                         onChange={(e) =>
                           updateSubItem(si, subi, "description", e.target.value)
                         }
-                        placeholder="Description / discussion"
+                        placeholder="Discussion / minutes description"
                         rows={2}
-                        className="text-sm px-2 py-1 rounded border resize-none"
-                        style={{
-                          borderColor: "var(--border)",
-                          background: "var(--bg-surface)",
-                          color: "var(--text-primary)",
-                        }}
+                        className="text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] outline-none resize-none transition-all duration-200 leading-relaxed w-full"
                       />
                       <input
                         value={sub.action}
                         onChange={(e) => updateSubItem(si, subi, "action", e.target.value)}
-                        placeholder="Action (or 'Note')"
-                        className="text-sm px-2 py-1 rounded border"
-                        style={{
-                          borderColor: "var(--border)",
-                          background: "var(--bg-surface)",
-                          color: "var(--text-primary)",
-                        }}
+                        placeholder="Action item details"
+                        className="text-xs px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] outline-none transition-all duration-200 w-full"
                       />
                       <select
                         value={sub.owner}
                         onChange={(e) => updateSubItem(si, subi, "owner", e.target.value)}
-                        className="text-sm px-2 py-1 rounded border"
-                        style={{
-                          borderColor: "var(--border)",
-                          background: "var(--bg-surface)",
-                          color: "var(--text-primary)",
-                        }}
+                        className="text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] outline-none transition-all duration-200 w-full cursor-pointer h-9"
                       >
                         <option value="">Owner</option>
                         {attendeeInitials.map((init) => (
@@ -449,22 +432,22 @@ export function NewMeetingModal({
                       <button
                         type="button"
                         onClick={() => removeSubItem(si, subi)}
-                        className="text-red-300 hover:text-red-500 transition-colors mt-1"
+                        className="text-red-400 hover:text-red-600 transition-colors p-1.5 md:p-1 hover:bg-red-50 rounded-lg absolute top-2 right-2 md:relative md:top-auto md:right-auto cursor-pointer"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   ))}
                 </div>
-                <div className="px-3 py-2">
+
+                <div className="px-4 py-2.5 bg-slate-50/30 border-t border-slate-100">
                   <button
                     type="button"
                     onClick={() => addSubItem(si)}
-                    className="text-xs flex items-center gap-1 transition-opacity hover:opacity-70"
-                    style={{ color: "var(--text-muted)" }}
+                    className="text-xs font-bold text-slate-500 hover:text-blue-600 flex items-center gap-1 transition-colors cursor-pointer"
                   >
-                    <Plus className="w-3 h-3" />
-                    Add item
+                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                    Add Minute Item
                   </button>
                 </div>
               </div>
@@ -472,24 +455,25 @@ export function NewMeetingModal({
             <button
               type="button"
               onClick={addAgendaSection}
-              className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70 mt-1"
-              style={{ color: "var(--accent)" }}
+              className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors mt-1 cursor-pointer self-start"
             >
-              <Plus className="w-4 h-4" />
-              Add section
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              Add Agenda Section
             </button>
           </div>
         </div>
 
-        {/* Next meeting */}
-        <Input
-          label="Next meeting date (optional)"
-          type="date"
-          value={nextMeeting}
-          onChange={(e) => setNextMeeting(e.target.value)}
-        />
+        {/* Next meeting date */}
+        <div className="border-t border-slate-100 pt-5">
+          <Input
+            label="Next meeting date (optional)"
+            type="date"
+            value={nextMeeting}
+            onChange={(e) => setNextMeeting(e.target.value)}
+          />
+        </div>
 
-        <div className="flex justify-end gap-2 pt-2">
+        <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 mt-2">
           <Button variant="ghost" type="button" onClick={onClose}>
             Cancel
           </Button>

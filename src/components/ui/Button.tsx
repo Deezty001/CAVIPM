@@ -12,15 +12,15 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center gap-1.5 rounded-full border font-medium leading-none transition-all duration-150 cursor-pointer",
-          "focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
-          size === "sm" && "h-8 px-3 text-xs",
-          size === "md" && "h-[38px] px-5 text-[13px]",
-          size === "lg" && "h-11 px-7 text-sm",
-          variant === "primary" && "border-[#111111] bg-[#111111] text-white hover:opacity-80 active:opacity-70",
-          variant === "secondary" && "border-[#e0e0de] bg-white text-[#111111] hover:border-[#bebebe] hover:bg-[#f5f5f3] active:bg-[#edecea]",
-          variant === "ghost" && "border-transparent bg-transparent text-[#6b6b6b] hover:bg-[#f0f0ee] hover:text-[#111111]",
-          variant === "danger" && "border-transparent bg-[#f7ebeb] text-[#a03535] hover:bg-[#f1dddd]",
+          "inline-flex items-center justify-center gap-1.5 rounded-xl border font-semibold leading-none transition-all duration-200 cursor-pointer",
+          "focus-visible:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50",
+          size === "sm" && "h-8 px-3.5 text-xs",
+          size === "md" && "h-10 px-5 text-[13px]",
+          size === "lg" && "h-12 px-7 text-sm",
+          variant === "primary" && "border-blue-600 bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/10 active:scale-[0.98]",
+          variant === "secondary" && "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 active:bg-slate-100 active:scale-[0.98]",
+          variant === "ghost" && "border-transparent bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:scale-[0.98]",
+          variant === "danger" && "border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:border-red-300 active:scale-[0.98]",
           className
         )}
         {...props}

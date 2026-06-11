@@ -10,11 +10,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ label, error, className, id, ...props }, ref) => {
     const textareaId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
     return (
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5 w-full">
         {label && (
           <label
             htmlFor={textareaId}
-            className="text-xs font-medium text-[#6b6b6b]"
+            className="text-[10px] font-bold text-slate-500 uppercase tracking-wider"
           >
             {label}
           </label>
@@ -23,14 +23,14 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           id={textareaId}
           className={cn(
-            "min-h-24 w-full resize-y rounded-[10px] border bg-[#f5f5f3] px-[14px] py-2.5 text-[13px] leading-relaxed text-[#111111] outline-none transition-all duration-150",
-            "placeholder:text-[#a0a0a0] hover:border-[#bebebe] focus:border-[#111111] focus:bg-white focus:shadow-[0_0_0_3px_rgba(17,17,17,0.08)]",
-            error ? "border-[#a03535]" : "border-[#e0e0de]",
+            "min-h-24 w-full resize-y rounded-xl border bg-slate-50 px-3.5 py-2.5 text-[13px] leading-relaxed text-slate-900 outline-none transition-all duration-200",
+            "placeholder:text-slate-400 hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:shadow-[0_0_0_3px_rgba(59,130,246,0.15)]",
+            error ? "border-red-400" : "border-slate-200",
             className
           )}
           {...props}
         />
-        {error && <p className="text-[11px] font-medium text-[#a03535]">{error}</p>}
+        {error && <p className="text-[11px] font-semibold text-red-500">{error}</p>}
       </div>
     );
   }
