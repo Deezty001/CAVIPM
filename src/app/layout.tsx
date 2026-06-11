@@ -16,7 +16,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Nav />
-        <main className="min-h-screen md:pl-[60px] pt-16">{children}</main>
+        <main className="min-h-screen pt-16">{children}</main>
       </body>
     </html>
   );

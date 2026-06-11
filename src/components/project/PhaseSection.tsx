@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ChevronDown, Plus, AlertCircle } from "lucide-react";
-import { PHASE_COLORS, PHASE_BAR_COLORS } from "@/lib/utils";
+import { AlertCircle, Plus } from "lucide-react";
+import { PHASE_BAR_COLORS, PHASE_COLORS } from "@/lib/utils";
 import { TaskRow } from "./TaskRow";
 import { TaskForm } from "./TaskForm";
 import { createTask } from "@/actions/tasks";
@@ -45,8 +45,6 @@ interface PhaseSectionProps {
   phaseIndex: number;
   projectId: string;
   contacts: Contact[];
-  expanded: boolean;
-  onToggle: () => void;
 }
 
 export function PhaseSection({
@@ -54,18 +52,15 @@ export function PhaseSection({
   phaseIndex,
   projectId,
   contacts,
-  expanded,
-  onToggle,
 }: PhaseSectionProps) {
   const [showAddTask, setShowAddTask] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const allTasks = [...phase.tasks, ...phase.tasks.flatMap((t) => t.subtasks)];
+  const allTasks = [...phase.tasks, ...phase.tasks.flatMap((task) => task.subtasks)];
   const total = allTasks.length;
-  const done = allTasks.filter((t) => t.status === "DONE").length;
-  const blocked = allTasks.filter((t) => t.status === "BLOCKED").length;
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-
+  const done = allTasks.filter((task) => task.status === "DONE").length;
+  const blocked = allTasks.filter((task) => task.status === "BLOCKED").length;
+  const progress = total > 0 ? Math.round((done / total) * 100) : 0;
   const colorClasses = PHASE_COLORS[phaseIndex] ?? PHASE_COLORS[0];
   const barColor = PHASE_BAR_COLORS[phaseIndex] ?? PHASE_BAR_COLORS[0];
 
@@ -87,94 +82,81 @@ export function PhaseSection({
   }
 
   return (
-    <section
-      id={`phase-${phaseIndex}`}
-      className="surface-card overflow-hidden"
-    >
-      {/* Phase header */}
-      <button
-        onClick={onToggle}
-        className="flex w-full items-center justify-between px-5 py-4 transition-colors hover:bg-[#f5f5f3]"
-      >
-        <div className="flex items-center gap-3">
-          <span
-            className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${colorClasses}`}
-          >
-            {phase.name}
-          </span>
-          {blocked > 0 && (
-            <span className="flex items-center gap-1 text-xs text-red-500 font-medium">
-              <AlertCircle className="w-3.5 h-3.5" />
-              {blocked} blocked
+    <section className="surface-card min-w-0 overflow-hidden">
+      <div className="flex flex-col justify-between gap-4 border-b border-[#f0f0ee] px-5 py-5 sm:flex-row sm:items-center">
+        <div>
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${colorClasses}`}>
+              Phase {phaseIndex + 1}
             </span>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2">
-            <div
-              className="w-24 h-1.5 rounded-full overflow-hidden"
-              style={{ background: "var(--bg-muted)" }}
-            >
-              <div
-                className={`h-full rounded-full ${barColor} transition-all duration-500`}
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-            <span
-              className="text-xs tabular-nums w-7 text-right"
-              style={{ color: "var(--text-muted)" }}
-            >
-              {pct}%
-            </span>
-            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-              {done}/{total}
-            </span>
+            {blocked > 0 && (
+              <span className="flex items-center gap-1 text-[11px] font-medium text-[#a03535]">
+                <AlertCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
+                {blocked} blocked
+              </span>
+            )}
           </div>
-          <ChevronDown
-            className={`w-4 h-4 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
-            style={{ color: "var(--text-muted)" }}
-          />
+          <h2 className="text-[18px] font-bold tracking-[-0.2px]">{phase.name}</h2>
+          <p className="mt-1 text-xs text-[#6b6b6b]">{done} of {total} tasks complete</p>
         </div>
-      </button>
+        <div className="flex items-center gap-4">
+          <div className="w-28">
+            <div className="mb-1.5 flex justify-between text-[11px] text-[#6b6b6b]">
+              <span>Progress</span>
+              <span>{progress}%</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-[#ebebeb]">
+              <div className={`h-full rounded-full ${barColor}`} style={{ width: `${progress}%` }} />
+            </div>
+          </div>
+          <button
+            onClick={() => setShowAddTask(true)}
+            className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#111111] px-4 text-xs font-medium text-white transition-opacity hover:opacity-80"
+          >
+            <Plus className="h-4 w-4" strokeWidth={1.5} />
+            Add task
+          </button>
+        </div>
+      </div>
 
-      {/* Blocked banner */}
-      {expanded && blocked > 0 && (
-        <div className="mx-5 mb-3 flex items-center gap-2 rounded-[10px] bg-[#f7ebeb] px-3 py-2 text-xs text-[#a03535]">
-          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+      {blocked > 0 && (
+        <div className="mx-5 mt-4 flex items-start gap-2 rounded-[10px] bg-[#f7ebeb] px-3 py-2.5 text-xs text-[#a03535]">
+          <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
           <span>
             {phase.tasks
-              .filter((t) => t.status === "BLOCKED")
-              .map((t) => t.name)
+              .filter((task) => task.status === "BLOCKED")
+              .map((task) => task.name)
               .join(", ")}{" "}
-            {blocked === 1 ? "is" : "are"} blocked
+            {blocked === 1 ? "is" : "are"} blocked.
           </span>
         </div>
       )}
 
-      {expanded && (
-        <div>
-          {/* Task table header */}
-          {phase.tasks.length > 0 && (
-            <div
-              className="hidden md:grid grid-cols-[minmax(0,1fr)_120px_100px_100px_80px_80px_60px] gap-2 px-4 py-2 text-xs font-medium border-b"
-              style={{
-                color: "var(--text-secondary)",
-                borderColor: "var(--divider)",
-                background: "var(--bg-subtle)",
-              }}
-            >
-              <span>Task</span>
-              <span>Assignee</span>
-              <span>Start</span>
-              <span>Due</span>
-              <span>Duration</span>
-              <span>Status</span>
-              <span>Priority</span>
-            </div>
-          )}
+      {showAddTask && (
+        <div className="border-b border-[#f0f0ee] p-5">
+          <TaskForm
+            contacts={contacts}
+            onSubmit={handleAddTask}
+            onCancel={() => setShowAddTask(false)}
+            loading={isPending}
+          />
+        </div>
+      )}
 
-          {/* Tasks */}
-          <div className="divide-y" style={{ borderColor: "var(--divider)" }}>
+      {phase.tasks.length === 0 ? (
+        <div className="px-6 py-14 text-center">
+          <p className="text-sm font-medium">No tasks in this phase</p>
+          <p className="mt-1 text-xs text-[#6b6b6b]">Add the first task when this phase is ready.</p>
+        </div>
+      ) : (
+        <>
+          <div className="hidden grid-cols-[minmax(0,1fr)_110px_120px_100px] gap-3 border-b border-[#f0f0ee] bg-[#fafaf9] px-5 py-2.5 text-[11px] font-medium text-[#6b6b6b] md:grid">
+            <span>Task</span>
+            <span>Owner</span>
+            <span>Due</span>
+            <span>Status</span>
+          </div>
+          <div className="divide-y divide-[#f0f0ee]">
             {phase.tasks.map((task) => (
               <TaskRow
                 key={task.id}
@@ -185,28 +167,7 @@ export function PhaseSection({
               />
             ))}
           </div>
-
-          {/* Add task */}
-          <div className="border-t px-5 py-3" style={{ borderColor: "var(--divider)" }}>
-            {showAddTask ? (
-              <TaskForm
-                contacts={contacts}
-                onSubmit={handleAddTask}
-                onCancel={() => setShowAddTask(false)}
-                loading={isPending}
-              />
-            ) : (
-              <button
-                onClick={() => setShowAddTask(true)}
-                className="flex items-center gap-1.5 text-sm transition-colors hover:opacity-70"
-                style={{ color: "var(--text-link)" }}
-              >
-                <Plus className="w-4 h-4" />
-                Add task
-              </button>
-            )}
-          </div>
-        </div>
+        </>
       )}
     </section>
   );

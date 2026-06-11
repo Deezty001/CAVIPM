@@ -54,9 +54,8 @@
   --shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
   --shadow-focus: 0 0 0 3px rgba(17, 17, 17, 0.08);
 
-  --sidebar-width: 60px;
   --topbar-height: 64px;
-  --content-max-width: 1400px;
+  --content-max-width: 1240px;
 
   /* Backwards-compatible aliases used by feature components. */
   --bg-base: var(--bg-app);
@@ -210,7 +209,7 @@ h6 {
 
 @media (max-width: 767px) {
   .app-page {
-    padding: 24px 16px 88px;
+    padding: 24px 16px 48px;
   }
 }
 
