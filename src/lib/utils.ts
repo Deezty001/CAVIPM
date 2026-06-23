@@ -42,12 +42,12 @@ export const PHASE_BAR_COLORS = [
 ] as const;
 
 export const PHASE_GANTT_COLORS = [
-  "#a855f7",
-  "#3b82f6",
-  "#f97316",
-  "#10b981",
-  "#f59e0b",
-  "#64748b",
+  "#8c7b8e", // Warm Plum/Taupe
+  "#4b7754", // Sage Green
+  "#b85c4c", // Terracotta Red
+  "#467a6d", // Soft Teal
+  "#d08b3c", // Muted Ochre
+  "#7d756b", // Warm Sand-brown
 ] as const;
 
 export const STATUS_CONFIG = {

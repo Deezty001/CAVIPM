@@ -1,64 +1,75 @@
 @import "tailwindcss";
 
 :root {
-  --bg-app: #f8fafc; /* Slate 50 */
-  --bg-card: #ffffff;
-  --bg-subtle: #f1f5f9; /* Slate 100 */
-  --bg-hover: #e2e8f0; /* Slate 200 */
-  --bg-active-light: #cbd5e1; /* Slate 300 */
-  --bg-highlight: #f8fafc;
-  --bg-dark: #0f172a; /* Slate 900 */
+  /* Warm cream/sand theme inspired by Lotline */
+  --bg-app: #f9f8f6; /* cream background */
+  --bg-card: #ffffff; /* card bg */
+  --bg-subtle: #f2efe9; /* warm sand / light table header */
+  --bg-hover: #e8e4dc; /* hover state */
+  --bg-active-light: #dfdcd3; /* active state light */
+  --bg-highlight: #faf9f7; /* highlight bg */
+  --bg-dark: #1d1d1a; /* dark charcoal for sidebar or primary text inverse */
 
-  --text-primary: #0f172a; /* Slate 900 */
-  --text-secondary: #475569; /* Slate 600 */
-  --text-tertiary: #64748b; /* Slate 500 */
-  --text-disabled: #94a3b8; /* Slate 400 */
+  /* Typography Colors */
+  --text-primary: #1d1d1a; /* deep charcoal / warm off-black */
+  --text-secondary: #4a4339; /* warm dark brown-grey */
+  --text-tertiary: #7d756b; /* warm medium grey */
+  --text-disabled: #a89f93; /* light sand-grey */
   --text-inverse: #ffffff;
-  --text-link: #3b82f6; /* Blue 500 */
+  --text-link: #4b7754; /* Sage green for links */
 
-  --accent-blue: #3b82f6;
-  --accent-blue-light: #eff6ff;
-  --accent-blue-dark: #1d4ed8;
-  --accent-clay: #f97316; /* Orange 500 */
-  --accent-clay-light: #fff7ed;
-  --accent-clay-dark: #c2410c;
-  --accent-violet: #8b5cf6; /* Violet 500 */
-  --accent-violet-light: #f5f3ff;
-  --accent-violet-dark: #6d28d9;
+  /* Sage Green (Success/Primary Accent) */
+  --accent-blue: #4b7754;
+  --accent-blue-light: #eff5ef;
+  --accent-blue-dark: #3b5d42;
 
-  --status-success: #10b981; /* Emerald 500 */
-  --status-success-bg: #ecfdf5;
-  --status-warning: #f59e0b; /* Amber 500 */
-  --status-warning-bg: #fffbeb;
-  --status-error: #ef4444; /* Red 500 */
-  --status-error-bg: #fef2f2;
-  --status-info: #3b82f6;
-  --status-info-bg: #eff6ff;
+  /* Terracotta (Alert/Error Accent) */
+  --accent-clay: #b85c4c;
+  --accent-clay-light: #fdf5f3;
+  --accent-clay-dark: #964638;
 
-  --border-faint: #f8fafc;
-  --border-default: #e2e8f0;
-  --border-strong: #cbd5e1;
-  --border-focus: #3b82f6;
-  --border-active: #3b82f6;
-  --divider: #f1f5f9;
+  /* Warm Muted Yellow/Orange (Warning/On Hold Accent) */
+  --accent-violet: #d08b3c;
+  --accent-violet-light: #fef7ed;
+  --accent-violet-dark: #ab6e2c;
 
+  /* Status mappings */
+  --status-success: #4b7754;
+  --status-success-bg: #eff5ef;
+  --status-warning: #d08b3c;
+  --status-warning-bg: #fef7ed;
+  --status-error: #b85c4c;
+  --status-error-bg: #fdf5f3;
+  --status-info: #4b7754;
+  --status-info-bg: #eff5ef;
+
+  /* Borders & Dividers */
+  --border-faint: #f5f3f0;
+  --border-default: #e9e5dd; /* warm border */
+  --border-strong: #d0c8bd; /* strong warm border */
+  --border-focus: #4b7754; /* focus border */
+  --border-active: #4b7754;
+  --divider: #e9e5dd;
+
+  /* Organic Rounded Corners */
   --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
   --radius-full: 9999px;
 
-  --shadow-card: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(15, 23, 42, 0.04);
-  --shadow-hover: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.05);
-  --shadow-raised: 0 12px 20px -8px rgba(15, 23, 42, 0.12), 0 4px 8px -4px rgba(15, 23, 42, 0.08);
-  --shadow-modal: 0 25px 50px -12px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(15, 23, 42, 0.05);
-  --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  /* Soft custom shadows with sand color cast */
+  --shadow-card: 0 4px 12px -2px rgba(74, 67, 57, 0.04), 0 2px 6px -1px rgba(74, 67, 57, 0.03), 0 0 0 1px rgba(74, 67, 57, 0.02);
+  --shadow-hover: 0 12px 20px -4px rgba(74, 67, 57, 0.07), 0 4px 8px -2px rgba(74, 67, 57, 0.05), 0 0 0 1px rgba(74, 67, 57, 0.03);
+  --shadow-raised: 0 16px 28px -8px rgba(74, 67, 57, 0.1), 0 6px 12px -4px rgba(74, 67, 57, 0.06);
+  --shadow-modal: 0 30px 60px -15px rgba(74, 67, 57, 0.15), 0 0 0 1px rgba(74, 67, 57, 0.04);
+  --shadow-focus: 0 0 0 3px rgba(75, 119, 84, 0.15);
 
   --topbar-height: 64px;
   --content-max-width: 1240px;
 
-  /* Backwards-compatible aliases used by feature components. */
+  /* Backwards-compatible aliases */
   --bg-base: var(--bg-app);
   --bg-surface: var(--bg-card);
   --bg-elevated: var(--bg-card);
@@ -67,7 +78,7 @@
   --accent: var(--accent-blue);
   --accent-hover: var(--accent-blue-dark);
   --accent-light: var(--accent-blue-light);
-  --accent-mid: #93c5fd;
+  --accent-mid: #a3c1a9;
   --border: var(--border-default);
   --border-hover: var(--border-strong);
 }
@@ -76,7 +87,71 @@
   --color-background: var(--bg-app);
   --color-foreground: var(--text-primary);
   --font-sans: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display: var(--font-display), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: var(--font-display), Georgia, serif;
+
+  /* Redefine default Tailwind color palettes to our custom palette colors so class names automatically adapt */
+  --color-slate-50: #fcfbf9;
+  --color-slate-100: #f4f1eb;
+  --color-slate-150: #ede9df;
+  --color-slate-200: #e9e4db;
+  --color-slate-300: #dcd5c9;
+  --color-slate-400: #938c82;
+  --color-slate-500: #7d756b;
+  --color-slate-600: #625c53;
+  --color-slate-700: #4a4339;
+  --color-slate-800: #332d26;
+  --color-slate-850: #26211c;
+  --color-slate-900: #1d1d1a;
+  --color-slate-950: #131311;
+
+  --color-blue-50: #f0f5f1;
+  --color-blue-100: #e2ede5;
+  --color-blue-200: #c6dacb;
+  --color-blue-500: #4b7754;
+  --color-blue-600: #4b7754;
+  --color-blue-700: #3b5d42;
+
+  --color-purple-50: #f7f5f8;
+  --color-purple-100: #eae4eb;
+  --color-purple-500: #8c7b8e;
+  --color-purple-600: #8c7b8e;
+  --color-purple-700: #716073;
+
+  --color-indigo-50: #f5f4ef;
+  --color-indigo-100: #e8e6db;
+  --color-indigo-600: #6b6452; /* warm dark khaki/indigo alternate */
+  --color-indigo-700: #554e3f;
+
+  --color-emerald-50: #f0f5f1;
+  --color-emerald-100: #e2ede5;
+  --color-emerald-500: #4b7754;
+  --color-emerald-600: #4b7754;
+  --color-emerald-700: #3b5d42;
+
+  --color-red-50: #fdf5f3;
+  --color-red-100: #fbdcd6;
+  --color-red-650: #f8dfda;
+  --color-red-600: #b85c4c;
+  --color-red-700: #964638;
+
+  --color-rose-50: #fdf5f3;
+  --color-rose-100: #fbdcd6;
+  --color-rose-600: #b85c4c;
+  --color-rose-700: #964638;
+
+  --color-amber-50: #fef7ed;
+  --color-amber-100: #fbebd6;
+  --color-amber-600: #d08b3c;
+  --color-amber-700: #ab6e2c;
+
+  --color-orange-50: #fef7ed;
+  --color-orange-100: #fbebd6;
+  --color-orange-500: #d08b3c;
+  --color-orange-700: #ab6e2c;
+  
+  /* Boutique spring transition curve */
+  --transition-all: all 350ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-colors: color 250ms cubic-bezier(0.16, 1, 0.3, 1), background-color 250ms cubic-bezier(0.16, 1, 0.3, 1), border-color 250ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 *,
@@ -96,9 +171,9 @@ body {
   margin: 0;
   background: var(--bg-app);
   color: var(--text-primary);
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 button,
@@ -121,7 +196,7 @@ h5,
 h6 {
   margin: 0;
   color: var(--text-primary);
-  font-family: inherit;
+  font-family: var(--font-display), Georgia, serif;
 }
 
 ::selection {
@@ -139,7 +214,7 @@ h6 {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d0d0ce;
+  background: #d0c8bd;
   border-radius: var(--radius-full);
 }
 
