@@ -17,7 +17,6 @@ import { formatAUDate, isOverdue } from "@/lib/dates";
 import { PhaseSection } from "./PhaseSection";
 import { ContactsPanel } from "./ContactsPanel";
 import { ProjectSettingsModal } from "./ProjectSettingsModal";
-import { Button } from "@/components/ui/Button";
 
 type Project = NonNullable<Awaited<ReturnType<typeof import("@/actions/projects").getProject>>>;
 
@@ -75,30 +74,30 @@ export function ProjectDetailClient({ project }: { project: Project }) {
     project.status === "ACTIVE" ? "Active" : project.status === "ON_HOLD" ? "On hold" : "Complete";
 
   return (
-    <div className="app-page max-w-[1240px] px-4 py-8 md:px-8">
+    <div className="app-page">
       {/* Back Breadcrumb */}
       <Link
         href="/"
-        className="mb-4 inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-wider"
+        className="mb-5 inline-flex items-center gap-1 text-[10px] font-semibold text-slate-500 hover:text-blue-700 transition-colors uppercase tracking-[.14em]"
       >
         <ChevronLeft className="h-4 w-4 stroke-[2.5]" />
         Back to projects
       </Link>
 
       {/* Header section */}
-      <header className="mb-8 flex flex-col justify-between gap-6 lg:flex-row lg:items-start border-b border-slate-100 pb-6">
+      <header className="mb-8 flex flex-col justify-between gap-6 lg:flex-row lg:items-end border-b border-slate-200 pb-8">
         <div className="min-w-0">
           <div className="mb-2 flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 font-display sm:text-4xl">
+            <h1 className="text-[clamp(32px,4vw,48px)] font-semibold leading-none tracking-[-.05em] text-slate-950">
               {project.name}
             </h1>
             <span
-              className={`rounded-full px-3 py-0.5 text-xs font-bold border ${
+              className={`border-l-2 px-2 py-1 text-[10px] font-semibold uppercase tracking-[.12em] ${
                 project.status === "ACTIVE"
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                  ? "bg-transparent text-emerald-700 border-emerald-600"
                   : project.status === "ON_HOLD"
-                    ? "bg-amber-50 text-amber-700 border-amber-100"
-                    : "bg-slate-50 text-slate-600 border-slate-200"
+                    ? "bg-transparent text-amber-700 border-amber-600"
+                    : "bg-transparent text-slate-600 border-slate-400"
               }`}
             >
               {statusLabel}
@@ -114,21 +113,21 @@ export function ProjectDetailClient({ project }: { project: Project }) {
         <div className="flex flex-wrap items-center gap-3">
           <Link
             href={`/projects/${project.id}/gantt`}
-            className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98]"
+            className="inline-flex h-10 items-center gap-2 rounded-[5px] border border-slate-300 bg-white px-4 text-[12px] font-semibold text-slate-700 transition-all hover:border-slate-400 hover:bg-slate-50"
           >
             <BarChart3 className="h-4 w-4 text-slate-500" strokeWidth={2} />
             Gantt Chart
           </Link>
           <Link
             href={`/projects/${project.id}/meetings`}
-            className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98]"
+            className="inline-flex h-10 items-center gap-2 rounded-[5px] border border-slate-300 bg-white px-4 text-[12px] font-semibold text-slate-700 transition-all hover:border-slate-400 hover:bg-slate-50"
           >
             <CalendarDays className="h-4 w-4 text-slate-500" strokeWidth={2} />
             Meetings
           </Link>
           <button
             onClick={() => setSettingsOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98] cursor-pointer"
+            className="flex h-10 w-10 items-center justify-center rounded-[5px] border border-slate-300 bg-white text-slate-500 transition-all hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
             aria-label="Project settings"
           >
             <Settings className="h-4 w-4" strokeWidth={2} />
@@ -139,7 +138,7 @@ export function ProjectDetailClient({ project }: { project: Project }) {
       {/* Mini Stats and Alerts */}
       <div className="mb-8 grid gap-6 md:grid-cols-2">
         {/* Progress Card */}
-        <section className="surface-card border border-slate-100 p-6 rounded-2xl flex flex-col justify-between">
+        <section className="surface-card border border-slate-200 p-6 flex flex-col justify-between">
           <div>
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
@@ -152,9 +151,9 @@ export function ProjectDetailClient({ project }: { project: Project }) {
                 <ProjectMetric label="Overdue" value={overdueTasks} tone="warning" />
               </div>
             </div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-1.5 overflow-hidden bg-slate-100">
               <div
-                className="h-full rounded-full bg-blue-600 transition-all duration-500"
+                className="h-full bg-blue-600 transition-all duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -166,7 +165,7 @@ export function ProjectDetailClient({ project }: { project: Project }) {
         </section>
 
         {/* Needs Attention Card */}
-        <section className="surface-card border border-slate-100 p-6 rounded-2xl">
+        <section className="surface-card border border-slate-200 p-6">
           <div className="mb-3 flex items-center justify-between">
             <div>
               <h2 className="text-sm font-bold text-slate-800 font-display">Needs Attention</h2>
@@ -226,23 +225,23 @@ export function ProjectDetailClient({ project }: { project: Project }) {
 
       {/* Navigation Tabs (Apple Segmented Control Style) */}
       <div className="mb-6 flex justify-start">
-        <div className="bg-slate-100 p-1 rounded-xl inline-flex gap-1.5 border border-slate-200/40">
+        <div className="inline-flex border-b border-slate-300">
           <button
             onClick={() => setActiveTab("tasks")}
-            className={`px-5 py-2.5 rounded-lg text-[13px] font-bold transition-all cursor-pointer ${
+            className={`border-b-2 px-5 py-2.5 text-[12px] font-semibold transition-all cursor-pointer ${
               activeTab === "tasks"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500 hover:text-slate-900"
+                ? "border-blue-600 text-slate-900"
+                : "border-transparent text-slate-500 hover:text-slate-900"
             }`}
           >
             Phases & Tasks
           </button>
           <button
             onClick={() => setActiveTab("contacts")}
-            className={`px-5 py-2.5 rounded-lg text-[13px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`border-b-2 px-5 py-2.5 text-[12px] font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === "contacts"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500 hover:text-slate-900"
+                ? "border-blue-600 text-slate-900"
+                : "border-transparent text-slate-500 hover:text-slate-900"
             }`}
           >
             <Users className="h-4 w-4" strokeWidth={2} />

@@ -1,21 +1,16 @@
 import type { Metadata } from "next";
-import { Lora, Plus_Jakarta_Sans } from "next/font/google";
+import { Geist } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 
-const fontSans = Plus_Jakarta_Sans({
+const fontSans = Geist({
   subsets: ["latin"],
   variable: "--font-sans",
 });
 
-const fontDisplay = Lora({
-  subsets: ["latin"],
-  variable: "--font-display",
-});
-
 export const metadata: Metadata = {
-  title: "Cavi Property Tracker",
-  description: "Project management for Cavi Property development projects",
+  title: "Cavi Projects — Development Intelligence",
+  description: "A unified workspace for property development delivery.",
 };
 
 export default function RootLayout({
@@ -24,10 +19,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${fontSans.variable} ${fontDisplay.variable}`}>
+    <html lang="en" className={fontSans.variable}>
       <body className="font-sans antialiased">
         <Nav />
-        <main className="min-h-screen pt-16">{children}</main>
+        <main className="min-h-screen pt-[72px]">{children}</main>
       </body>
     </html>
   );

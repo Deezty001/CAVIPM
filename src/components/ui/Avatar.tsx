@@ -29,7 +29,7 @@ export function Avatar({ initials, size = "sm", className, title }: AvatarProps)
     <span
       title={title}
       className={cn(
-        "inline-flex items-center justify-center rounded-full font-semibold shrink-0",
+        "inline-flex items-center justify-center rounded-[4px] font-semibold shrink-0",
         colorForInitials(initials),
         size === "xs" && "w-5 h-5 text-[10px]",
         size === "sm" && "w-6 h-6 text-xs",

@@ -51,7 +51,7 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
             transition={{ type: "spring", damping: 25, stiffness: 380 }}
             className={cn(
-              "relative w-full rounded-2xl flex flex-col max-h-[90vh] bg-white border border-slate-100 shadow-2xl z-10 my-8",
+              "relative w-full rounded-[10px] flex flex-col max-h-[90vh] bg-white border border-slate-200 shadow-2xl z-10 my-8",
               size === "sm" && "max-w-sm",
               size === "md" && "max-w-lg",
               size === "lg" && "max-w-2xl",
@@ -68,7 +68,7 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
                 </h2>
                 <button
                   onClick={onClose}
-                  className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
+                  className="flex h-8 w-8 items-center justify-center rounded-[4px] bg-slate-50 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
                   aria-label="Close"
                 >
                   <X className="h-4 w-4" strokeWidth={2} />

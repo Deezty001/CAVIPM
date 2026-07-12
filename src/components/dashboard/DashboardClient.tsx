@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, AlertCircle, Clock, FolderOpen, Layers } from "lucide-react";
-import { motion, Variants } from "framer-motion";
+import { useMemo, useState } from "react";
+import { Plus, AlertTriangle, ArrowDownUp, Search, SlidersHorizontal } from "lucide-react";
+import { motion } from "framer-motion";
 import { ProjectCard } from "./ProjectCard";
 import { NewProjectModal } from "./NewProjectModal";
 import { Button } from "@/components/ui/Button";
@@ -11,190 +11,87 @@ import { isOverdue } from "@/lib/dates";
 type Project = Awaited<ReturnType<typeof import("@/actions/projects").getProjects>>[number];
 
 function computePortfolioStats(projects: Project[]) {
-  let active = 0, totalLots = 0, blocked = 0, overdue = 0;
+  let active = 0, totalLots = 0, blocked = 0, overdue = 0, done = 0, total = 0;
   for (const p of projects) {
     if (p.status === "ACTIVE") active++;
-    if (p.lotCount) totalLots += p.lotCount;
-    for (const phase of p.phases) {
-      for (const t of phase.tasks) {
-        if (t.status === "BLOCKED") blocked++;
-        if (isOverdue(t.dueDate, t.status)) overdue++;
-        for (const s of t.subtasks) {
-          if (s.status === "BLOCKED") blocked++;
-          if (isOverdue(s.dueDate, s.status)) overdue++;
-        }
-      }
+    totalLots += p.lotCount || 0;
+    for (const phase of p.phases) for (const task of phase.tasks) {
+      const items = [task, ...task.subtasks];
+      for (const item of items) { total++; if (item.status === "DONE") done++; if (item.status === "BLOCKED") blocked++; if (isOverdue(item.dueDate, item.status)) overdue++; }
     }
   }
-  return { active, totalLots, blocked, overdue };
+  return { active, totalLots, blocked, overdue, completion: total ? Math.round(done / total * 100) : 0 };
 }
-
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-    },
-  },
-};
-
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 15 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
-};
 
 export function DashboardClient({ projects }: { projects: Project[] }) {
   const [newProjectOpen, setNewProjectOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"ALL" | "ACTIVE" | "ON_HOLD" | "COMPLETE">("ALL");
   const stats = computePortfolioStats(projects);
+  const filtered = useMemo(() => projects.filter((p) => {
+    const matches = `${p.name} ${p.address} ${p.suburb}`.toLowerCase().includes(query.toLowerCase());
+    return matches && (filter === "ALL" || p.status === filter);
+  }), [projects, query, filter]);
 
   return (
-    <div className="app-page max-w-[1240px] px-4 py-8 md:px-8">
-      {/* Header Panel */}
-      <div className="mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+    <div className="app-page">
+      <header className="mb-8 grid gap-7 border-b border-slate-200 pb-8 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
-          <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-1 font-display">
-            Property Development Workspace
-          </p>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 font-display sm:text-4xl">
-            Project Portfolio
-          </h1>
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[.18em] text-blue-600">Portfolio overview · NSW</p>
+          <h1 className="text-[clamp(32px,4vw,52px)] font-semibold leading-none tracking-[-.055em] text-slate-950">Development portfolio</h1>
+          <p className="mt-4 max-w-xl text-sm leading-6 text-slate-500">A live view of delivery progress, programme risk, and the work requiring your attention.</p>
         </div>
-        <Button
-          variant="primary"
-          onClick={() => setNewProjectOpen(true)}
-          className="gap-2 shadow-md hover:shadow-lg self-start sm:self-auto cursor-pointer"
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          New Project
+        <Button variant="primary" size="lg" onClick={() => setNewProjectOpen(true)} className="self-start lg:self-auto">
+          <Plus className="h-4 w-4" /> Create project
         </Button>
-      </div>
+      </header>
 
-      {projects.length > 0 && (
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          animate="show"
-          className="mb-10 grid grid-cols-2 gap-4 lg:grid-cols-4"
-        >
-          <motion.div variants={itemVariants}>
-            <Stat
-              label="Active projects"
-              value={stats.active}
-              icon={<FolderOpen className="w-5 h-5" />}
-              color="text-blue-600 bg-blue-50 border-blue-100"
-            />
-          </motion.div>
-          <motion.div variants={itemVariants}>
-            <Stat
-              label="Total lots"
-              value={stats.totalLots || "—"}
-              icon={<Layers className="w-5 h-5" />}
-              color="text-indigo-600 bg-indigo-50 border-indigo-100"
-            />
-          </motion.div>
-          <motion.div variants={itemVariants}>
-            <Stat
-              label="Blocked items"
-              value={stats.blocked}
-              icon={<AlertCircle className="w-5 h-5" />}
-              color={stats.blocked > 0 ? "text-rose-600 bg-rose-50 border-rose-100" : "text-slate-400 bg-slate-50 border-slate-100"}
-              highlight={stats.blocked > 0}
-            />
-          </motion.div>
-          <motion.div variants={itemVariants}>
-            <Stat
-              label="Overdue items"
-              value={stats.overdue}
-              icon={<Clock className="w-5 h-5" />}
-              color={stats.overdue > 0 ? "text-amber-600 bg-amber-50 border-amber-100" : "text-slate-400 bg-slate-50 border-slate-100"}
-              highlight={stats.overdue > 0}
-            />
-          </motion.div>
-        </motion.div>
-      )}
-
-      {/* Project grid */}
-      {projects.length === 0 ? (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
-          className="surface-card flex flex-col items-center justify-center px-6 py-20 text-center border border-slate-150 rounded-2xl"
-        >
-          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 border border-slate-100">
-            <FolderOpen className="h-8 w-8" strokeWidth={1.5} />
-          </div>
-          <h2 className="mb-2 text-lg font-bold text-slate-800 font-display">
-            No projects yet
-          </h2>
-          <p className="mb-6 max-w-[320px] text-sm text-slate-500 leading-relaxed">
-            Create your first property development project to start tracking stages, tasks, meetings, and Gantt charts.
-          </p>
-          <Button variant="primary" onClick={() => setNewProjectOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            New Project
-          </Button>
-        </motion.div>
-      ) : (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h2 className="text-base font-bold text-slate-800 tracking-tight font-display">
-              All Properties
-            </h2>
-            <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
-              {projects.length} project{projects.length !== 1 ? "s" : ""}
-            </span>
-          </div>
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
-          >
-            {projects.map((project, i) => (
-              <motion.div key={project.id} variants={itemVariants}>
-                <ProjectCard project={project} index={i} />
-              </motion.div>
-            ))}
-          </motion.div>
+      {projects.length > 0 && <section className="mb-10 overflow-hidden border-y border-slate-200 bg-white">
+        <div className="grid grid-cols-2 lg:grid-cols-5">
+          <Metric label="Active projects" value={stats.active} detail={`${projects.length} total`} />
+          <Metric label="Lots under management" value={stats.totalLots || "—"} detail="Across portfolio" />
+          <Metric label="Portfolio completion" value={`${stats.completion}%`} detail="All tracked work" />
+          <Metric label="Blocked items" value={stats.blocked} detail={stats.blocked ? "Needs intervention" : "Clear"} alert={stats.blocked > 0} />
+          <Metric label="Overdue items" value={stats.overdue} detail={stats.overdue ? "Schedule exposure" : "On programme"} alert={stats.overdue > 0} />
         </div>
-      )}
+      </section>}
 
-      <NewProjectModal
-        open={newProjectOpen}
-        onClose={() => setNewProjectOpen(false)}
-      />
+      {projects.length === 0 ? (
+        <div className="border border-dashed border-slate-300 bg-white px-6 py-24 text-center">
+          <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-slate-400">Portfolio empty</p>
+          <h2 className="mt-3 text-2xl font-semibold tracking-[-.03em]">Start with your first development</h2>
+          <p className="mx-auto mb-7 mt-2 max-w-md text-sm text-slate-500">Set up the property, load the standard delivery programme, and create one source of truth for the team.</p>
+          <Button variant="primary" onClick={() => setNewProjectOpen(true)}><Plus className="h-4 w-4" /> Create project</Button>
+        </div>
+      ) : (
+        <section>
+          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-slate-400">Projects / {filtered.length}</p>
+              <h2 className="mt-1 text-xl font-semibold tracking-[-.03em] text-slate-900">Current developments</h2>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="flex h-10 min-w-0 flex-1 items-center gap-2 border border-slate-300 bg-white px-3 sm:w-60 sm:flex-none" aria-label="Search projects">
+                <Search className="h-3.5 w-3.5 text-slate-400" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search portfolio" className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-slate-400" />
+              </label>
+              <label className="flex h-10 items-center gap-2 border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-600">
+                <SlidersHorizontal className="h-3.5 w-3.5" /><select value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)} className="bg-transparent outline-none"><option value="ALL">All status</option><option value="ACTIVE">Active</option><option value="ON_HOLD">On hold</option><option value="COMPLETE">Complete</option></select>
+              </label>
+              <button className="grid h-10 w-10 place-items-center border border-slate-300 bg-white text-slate-500 hover:bg-slate-50" aria-label="Sort projects"><ArrowDownUp className="h-3.5 w-3.5" /></button>
+            </div>
+          </div>
+          {filtered.length ? <motion.div initial={{opacity:0}} animate={{opacity:1}} className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">{filtered.map((project, i) => <ProjectCard key={project.id} project={project} index={i} />)}</motion.div> : <div className="border border-slate-200 bg-white py-16 text-center text-sm text-slate-500">No projects match this view.</div>}
+        </section>
+      )}
+      <NewProjectModal open={newProjectOpen} onClose={() => setNewProjectOpen(false)} />
     </div>
   );
 }
 
-function Stat({
-  label,
-  value,
-  icon,
-  color,
-  highlight,
-}: {
-  label: string;
-  value: string | number;
-  icon: React.ReactNode;
-  color: string;
-  highlight?: boolean;
-}) {
-  return (
-    <div className="surface-card border border-slate-100/80 p-5 rounded-2xl flex items-center gap-4 hover:shadow-md hover:border-slate-200 transition-all duration-300">
-      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${color}`}>
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <div className={`text-2xl font-bold leading-none tracking-tight font-display tabular-nums ${highlight ? "text-slate-900" : "text-slate-900"}`}>
-          {value}
-        </div>
-        <div className="mt-1 text-xs font-medium text-slate-500 truncate">
-          {label}
-        </div>
-      </div>
-    </div>
-  );
+function Metric({ label, value, detail, alert = false }: { label: string; value: string | number; detail: string; alert?: boolean }) {
+  return <div className="relative min-h-32 border-b border-r border-slate-200 p-5 lg:border-b-0">
+    <div className="flex items-center justify-between"><span className="text-[10px] font-semibold uppercase tracking-[.13em] text-slate-500">{label}</span>{alert && <AlertTriangle className="h-3.5 w-3.5 text-red-600" />}</div>
+    <div className={`mt-5 text-3xl font-semibold tracking-[-.05em] tabular-nums ${alert ? "text-red-700" : "text-slate-950"}`}>{value}</div>
+    <div className="mt-1 text-[11px] text-slate-400">{detail}</div>
+  </div>;
 }
