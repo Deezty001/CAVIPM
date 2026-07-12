@@ -67,6 +67,14 @@ export const STATUS_CONFIG = {
     label: "Blocked",
     className: "bg-red-50 text-red-700 border-red-150",
   },
+  WAITING: {
+    label: "Waiting",
+    className: "bg-blue-50 text-blue-700 border-blue-100",
+  },
+  CANCELLED: {
+    label: "Cancelled",
+    className: "bg-slate-50 text-slate-400 border-slate-200",
+  },
 } as const;
 
 export const PRIORITY_CONFIG = {

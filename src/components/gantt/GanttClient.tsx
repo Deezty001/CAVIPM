@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { ChevronLeft, BarChart3, Download } from "lucide-react";
+import { ChevronLeft, BarChart3, Download, Redo2, Undo2 } from "lucide-react";
 import { PHASE_NAMES, PHASE_GANTT_COLORS } from "@/lib/utils";
 import { isBusinessDay } from "@/lib/holidays";
 import { formatAUDate, formatDuration } from "@/lib/dates";
@@ -68,11 +68,20 @@ interface GanttBarInfo {
   isSubtask: boolean;
 }
 
+type ScheduleChange = {
+  taskId: string;
+  taskName: string;
+  before: { start: Date; end: Date };
+  after: { start: Date; end: Date };
+};
+
 export function GanttClient({ project }: { project: Project }) {
   const [zoom, setZoom] = useState<ZoomLevel>("month");
   const [colorMode, setColorMode] = useState<"phase" | "status" | "priority">("phase");
   const [scrollLeft, setScrollLeft] = useState(0);
   const [tooltip, setTooltip] = useState<{ bar: GanttBarInfo; x: number; y: number } | null>(null);
+  const [undoStack, setUndoStack] = useState<ScheduleChange[]>([]);
+  const [redoStack, setRedoStack] = useState<ScheduleChange[]>([]);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -263,10 +272,19 @@ export function GanttClient({ project }: { project: Project }) {
     
     const finalDates = tempDates[dragState.taskId];
     const taskId = dragState.taskId;
+    const taskName = bars.find((bar) => bar.id === taskId)?.name ?? "Task";
+    const previousDates = { start: new Date(dragState.initialStart), end: new Date(dragState.initialEnd) };
     
     setDragState(null);
     
     if (finalDates) {
+      const changed = finalDates.start.getTime() !== previousDates.start.getTime() || finalDates.end.getTime() !== previousDates.end.getTime();
+      if (!changed) {
+        setTempDates((previous) => { const next = { ...previous }; delete next[taskId]; return next; });
+        return;
+      }
+      setUndoStack((previous) => [...previous.slice(-49), { taskId, taskName, before: previousDates, after: { start: new Date(finalDates.start), end: new Date(finalDates.end) } }]);
+      setRedoStack([]);
       const calendarDays = Math.round((finalDates.end.getTime() - finalDates.start.getTime()) / 86400000) + 1;
       
       startTransition(async () => {
@@ -290,6 +308,56 @@ export function GanttClient({ project }: { project: Project }) {
       }, 500);
     }
   };
+
+  async function persistSchedule(change: ScheduleChange, direction: "undo" | "redo") {
+    const dates = direction === "undo" ? change.before : change.after;
+    const duration = Math.round((dates.end.getTime() - dates.start.getTime()) / 86400000) + 1;
+    setTempDates((previous) => ({ ...previous, [change.taskId]: { start: new Date(dates.start), end: new Date(dates.end) } }));
+    await updateTask(change.taskId, project.id, { startDate: dates.start, dueDate: dates.end, duration });
+    setTimeout(() => setTempDates((previous) => { const next = { ...previous }; delete next[change.taskId]; return next; }), 500);
+  }
+
+  function undoScheduleChange() {
+    const change = undoStack[undoStack.length - 1];
+    if (!change || isPending) return;
+    setUndoStack((previous) => previous.slice(0, -1));
+    setRedoStack((previous) => [...previous, change]);
+    startTransition(async () => {
+      try { await persistSchedule(change, "undo"); }
+      catch (error) {
+        console.error("Failed to undo schedule change", error);
+        setUndoStack((previous) => [...previous, change]);
+        setRedoStack((previous) => previous.slice(0, -1));
+      }
+    });
+  }
+
+  function redoScheduleChange() {
+    const change = redoStack[redoStack.length - 1];
+    if (!change || isPending) return;
+    setRedoStack((previous) => previous.slice(0, -1));
+    setUndoStack((previous) => [...previous, change]);
+    startTransition(async () => {
+      try { await persistSchedule(change, "redo"); }
+      catch (error) {
+        console.error("Failed to redo schedule change", error);
+        setRedoStack((previous) => [...previous, change]);
+        setUndoStack((previous) => previous.slice(0, -1));
+      }
+    });
+  }
+
+  useEffect(() => {
+    function handleUndoShortcut(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      if (target?.matches("input, textarea, select, [contenteditable='true']")) return;
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "z") return;
+      event.preventDefault();
+      if (event.shiftKey) redoScheduleChange(); else undoScheduleChange();
+    }
+    window.addEventListener("keydown", handleUndoShortcut);
+    return () => window.removeEventListener("keydown", handleUndoShortcut);
+  });
 
   // Quick task creation
   const openQuickAdd = (phaseId: string, initialDate?: Date) => {
@@ -475,6 +543,24 @@ export function GanttClient({ project }: { project: Project }) {
 
         {/* Controls block */}
         <div className="flex flex-wrap items-center gap-4 self-start lg:self-auto">
+          <div className="flex items-center border border-slate-200 bg-white">
+            <button
+              onClick={undoScheduleChange}
+              disabled={undoStack.length === 0 || isPending}
+              className="inline-flex h-8 items-center gap-1.5 border-r border-slate-200 px-2.5 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+              title={undoStack.length ? `Undo: ${undoStack[undoStack.length - 1].taskName} (⌘/Ctrl Z)` : "Nothing to undo"}
+            >
+              <Undo2 className="h-3.5 w-3.5" /> Undo
+            </button>
+            <button
+              onClick={redoScheduleChange}
+              disabled={redoStack.length === 0 || isPending}
+              className="inline-flex h-8 items-center gap-1.5 px-2.5 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+              title={redoStack.length ? `Redo: ${redoStack[redoStack.length - 1].taskName} (⌘/Ctrl Shift Z)` : "Nothing to redo"}
+            >
+              <Redo2 className="h-3.5 w-3.5" /> Redo
+            </button>
+          </div>
           {/* Export options */}
           <div className="flex items-center gap-2">
             <Button

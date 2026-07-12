@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight, LayoutGrid } from "lucide-react";
+import { ArrowUpRight, CheckSquare2, LayoutGrid } from "lucide-react";
 
 export function Nav() {
   const pathname = usePathname();
@@ -18,9 +18,12 @@ export function Nav() {
             </span>
           </Link>
           <div className="hidden h-5 w-px bg-slate-200 sm:block" />
-          <nav aria-label="Primary navigation" className="hidden sm:block">
+          <nav aria-label="Primary navigation" className="hidden items-center gap-5 sm:flex">
             <Link href="/" className={`inline-flex h-9 items-center gap-2 border-b-2 px-1 text-xs font-semibold transition-colors ${pathname === "/" ? "border-blue-600 text-slate-900" : "border-transparent text-slate-500 hover:text-slate-900"}`}>
               <LayoutGrid className="h-3.5 w-3.5" /> Portfolio
+            </Link>
+            <Link href="/my-work" className={`inline-flex h-9 items-center gap-2 border-b-2 px-1 text-xs font-semibold transition-colors ${pathname.startsWith("/my-work") ? "border-blue-600 text-slate-900" : "border-transparent text-slate-500 hover:text-slate-900"}`}>
+              <CheckSquare2 className="h-3.5 w-3.5" /> My Work
             </Link>
           </nav>
         </div>

@@ -156,13 +156,11 @@ export function PhaseSection({
         </div>
       ) : (
         <>
-          <div className="hidden grid-cols-[minmax(0,1fr)_120px_120px_100px] gap-3 border-b border-slate-100 bg-slate-50/50 px-6 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 md:grid">
-            <span>Task</span>
-            <span>Owner</span>
-            <span>Due Date</span>
-            <span>Status</span>
+          <div className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-2.5 text-[9px] font-semibold uppercase tracking-[.14em] text-slate-400">
+            <span>Work items</span>
+            <span className="hidden sm:block">Due · Status</span>
           </div>
-          <div className="divide-y divide-slate-100">
+          <div>
             {phase.tasks.map((task) => (
               <TaskRow
                 key={task.id}

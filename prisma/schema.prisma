@@ -7,20 +7,73 @@ datasource db {
 }
 
 model Project {
-  id        String        @id @default(cuid())
-  name      String
-  address   String        @default("")
-  suburb    String        @default("")
-  type      ProjectType   @default(RESIDENTIAL_SUBDIVISION)
-  lotCount  Int?
-  status    ProjectStatus @default(ACTIVE)
-  logoUrl   String?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id          String        @id @default(cuid())
+  name        String
+  address     String        @default("")
+  suburb      String        @default("")
+  type        ProjectType   @default(RESIDENTIAL_SUBDIVISION)
+  lotCount    Int?
+  status      ProjectStatus @default(ACTIVE)
+  logoUrl     String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  workspaceId String?
+  workspace   Workspace?    @relation(fields: [workspaceId], references: [id])
 
-  phases   Phase[]
-  contacts Contact[]
-  meetings Meeting[]
+  phases          Phase[]
+  contacts        Contact[]
+  meetings        Meeting[]
+  personalActions PersonalAction[]
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships WorkspaceMember[]
+  projects    Project[]
+  actions     PersonalAction[]
+  activities  ActivityEvent[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  initials  String
+  avatarUrl String?
+  timezone  String   @default("Australia/Sydney")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships     WorkspaceMember[]
+  assignedTasks   Task[]            @relation("InternalTaskAssignee")
+  personalActions PersonalAction[]
+  activities      ActivityEvent[]
+  notifications   Notification[]
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole @default(MEMBER)
+  createdAt   DateTime      @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
 }
 
 enum ProjectType {
@@ -47,26 +100,37 @@ model Phase {
 }
 
 model Task {
-  id           String     @id @default(cuid())
-  name         String
-  description  String?
-  assigneeId   String?
-  assigneeText String?
-  startDate    DateTime?
-  dueDate      DateTime?
-  duration     Int?
-  status       TaskStatus @default(TODO)
-  priority     Priority   @default(NORMAL)
-  order        Int        @default(0)
-  phaseId      String
-  phase        Phase      @relation(fields: [phaseId], references: [id], onDelete: Cascade)
-  parentId     String?
-  parent       Task?      @relation("Subtasks", fields: [parentId], references: [id])
-  subtasks     Task[]     @relation("Subtasks")
-  comments     Comment[]
-  assignee     Contact?   @relation(fields: [assigneeId], references: [id])
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id               String           @id @default(cuid())
+  name             String
+  description      String?
+  assigneeId       String?
+  assigneeText     String?
+  assignedUserId   String?
+  startDate        DateTime?
+  dueDate          DateTime?
+  duration         Int?
+  status           TaskStatus       @default(TODO)
+  priority         Priority         @default(NORMAL)
+  plannedDate      DateTime?
+  estimateMinutes  Int?
+  completedAt      DateTime?
+  waitingOn        String?
+  waitingSince     DateTime?
+  followUpDate     DateTime?
+  lastActivityAt   DateTime         @default(now())
+  order            Int              @default(0)
+  phaseId          String
+  phase            Phase            @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  parentId         String?
+  parent           Task?            @relation("Subtasks", fields: [parentId], references: [id])
+  subtasks         Task[]           @relation("Subtasks")
+  comments         Comment[]
+  assignee         Contact?         @relation(fields: [assigneeId], references: [id])
+  assignedUser     User?            @relation("InternalTaskAssignee", fields: [assignedUserId], references: [id])
+  predecessorLinks TaskDependency[] @relation("DependencySuccessor")
+  successorLinks   TaskDependency[] @relation("DependencyPredecessor")
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 }
 
 enum TaskStatus {
@@ -74,6 +138,94 @@ enum TaskStatus {
   IN_PROGRESS
   DONE
   BLOCKED
+  WAITING
+  CANCELLED
+}
+
+model TaskDependency {
+  id            String         @id @default(cuid())
+  predecessorId String
+  successorId   String
+  type          DependencyType @default(FINISH_TO_START)
+  lagDays       Int            @default(0)
+  isHard        Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+
+  predecessor Task @relation("DependencyPredecessor", fields: [predecessorId], references: [id], onDelete: Cascade)
+  successor   Task @relation("DependencySuccessor", fields: [successorId], references: [id], onDelete: Cascade)
+
+  @@unique([predecessorId, successorId])
+}
+
+enum DependencyType {
+  FINISH_TO_START
+  START_TO_START
+  FINISH_TO_FINISH
+  START_TO_FINISH
+}
+
+model PersonalAction {
+  id              String     @id @default(cuid())
+  title           String
+  notes           String?
+  status          TaskStatus @default(TODO)
+  priority        Priority   @default(NORMAL)
+  plannedDate     DateTime?
+  dueDate         DateTime?
+  estimateMinutes Int?
+  completedAt     DateTime?
+  waitingOn       String?
+  waitingSince    DateTime?
+  followUpDate    DateTime?
+  isPrivate       Boolean    @default(true)
+  ownerId         String
+  workspaceId     String
+  projectId       String?
+  sourceTaskId    String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId, plannedDate])
+  @@index([ownerId, dueDate])
+  @@index([workspaceId, status])
+}
+
+model ActivityEvent {
+  id          String   @id @default(cuid())
+  workspaceId String
+  actorId     String?
+  entityType  String
+  entityId    String
+  action      String
+  before      Json?
+  after       Json?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  actor     User?     @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt])
+  @@index([entityType, entityId])
+}
+
+model Notification {
+  id         String    @id @default(cuid())
+  userId     String
+  type       String
+  title      String
+  body       String?
+  entityType String?
+  entityId   String?
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
 }
 
 enum Priority {
@@ -107,10 +259,10 @@ model Contact {
 }
 
 model Meeting {
-  id          String           @id @default(cuid())
+  id          String            @id @default(cuid())
   projectId   String
-  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  type        MeetingType      @default(PROGRESS_MEETING)
+  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type        MeetingType       @default(PROGRESS_MEETING)
   date        DateTime
   endTime     DateTime?
   location    String?
@@ -118,8 +270,8 @@ model Meeting {
   nextMeeting DateTime?
   attendees   MeetingAttendee[]
   agendaItems AgendaItem[]
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 }
 
 enum MeetingType {
